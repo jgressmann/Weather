@@ -1,0 +1,7 @@
+yellow RPI pin 26 CE
+orange RPI pin 24 CSN
+red    RPI pin 23 SCLK
+black  RPI pin 21 MISO
+brown  RPI pin 19 MOSI
+gray   RPI pin 20 GND
+white  RPI pin 17 3V3

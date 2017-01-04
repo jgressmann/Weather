@@ -1,0 +1,13 @@
+#ifndef GLOBALS_H
+#define GLOBALS_H
+
+#define RF24_PACKET_ROUTER_APP_NAME "rf24-packet-router"
+#define RF24_PACKET_ROUTER_SOCKET_PATH "/tmp/" RF24_PACKET_ROUTER_APP_NAME
+
+#define RF24_NETWORK_APP_NAME "rf24-network"
+#define RF24_NETWORK_SOCKET_PATH "/tmp/" RF24_NETWORK_APP_NAME
+
+
+
+#endif /* GLOBALS_H */
+

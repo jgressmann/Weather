@@ -1,0 +1,6 @@
+build/
+*.user
+*/RF24/utility/includes.h
+*junkyard*
+trash/
+src/rpi/3rd-party/RF24/utility/includes.h
