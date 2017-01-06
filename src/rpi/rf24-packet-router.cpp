@@ -1,6 +1,6 @@
 /* The MIT License (MIT)
  *
- * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
+ * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@
 #include <sys/un.h>
 #include <unistd.h>
 #include <fcntl.h>
-//#include <pwd.h>
 #include <signal.h>
 #include <semaphore.h>
 #include <pthread.h>
@@ -76,6 +75,8 @@ static buffer* s_Connections;
 static void EPollAcceptHandler(void* ctx, epoll_event* ev);
 static void EPollConnectionDataHandler(void* ctx, epoll_event* ev);
 static void EPollTimerHandler(void *ctx, epoll_event *ev);
+static void EPollIrqPinHandler(void *ctx, epoll_event *ev);
+static void PollRadio();
 
 static sem_t s_Shutdown;
 
@@ -201,7 +202,7 @@ static const rf24_datarate_e s_DataRateTable[] = { RF24_250KBPS, RF24_1MBPS, RF2
 static
 int
 DataRate_Parser(void*, char* arg) {
-    int error = ByteParser(arg, s_DataRate);\
+    int error = ByteParser(arg, s_DataRate);
     if (!error) {
         switch (s_DataRate) {
         case 0: case 1: case 2:
@@ -225,7 +226,7 @@ static uint8_t s_PowerLevel = 3;
 static
 int
 Power_Level_Parser(void*, char* arg) {
-    int error = ByteParser(arg, s_PowerLevel);\
+    int error = ByteParser(arg, s_PowerLevel);
     if (!error) {
         switch (s_PowerLevel) {
         case RF24_PA_MIN:
@@ -251,7 +252,7 @@ static uint8_t s_Crc_Length = 2;
 static
 int
 Crc_Length_Parser(void*, char* arg) {
-    int error = ByteParser(arg, s_Crc_Length);\
+    int error = ByteParser(arg, s_Crc_Length);
     if (!error) {
         switch (s_Crc_Length) {
         case RF24_CRC_DISABLED:
@@ -270,7 +271,7 @@ static uint8_t s_PayloadSize = MAX_PAYLOAD_SIZE;
 static
 int
 Payload_Parser(void*, char* arg) {
-    int error = ByteParser(arg, s_PayloadSize);\
+    int error = ByteParser(arg, s_PayloadSize);
     if (!error) {
         if (!s_PayloadSize || s_PayloadSize > MAX_PAYLOAD_SIZE) {
             ERROR("Invalid payload size %d. Max payload is " STRINGIFY(MAX_PAYLOAD_SIZE) " bytes.\n", s_PayloadSize);
@@ -295,6 +296,12 @@ SocketPath_Parser(void*, char* arg) {
     return 0;
 }
 
+static uint8_t s_IrqPin = 0;
+static
+int
+Irq_Parser(void*, char* arg) {
+    return ByteParser(arg, s_IrqPin);
+}
 
 
 static const cmdlopt_opt s_Options[] = {
@@ -306,13 +313,24 @@ static const cmdlopt_opt s_Options[] = {
     { "rf24-payload-size", "Size of payload. Defaults to " STRINGIFY(MAX_PAYLOAD_SIZE) ".", 0, 0x105, s_Dummy_Arg, Payload_Parser },
     { "rf24-power-level", "<value>", 'p', 0x106, s_Power_Level_Arg, Power_Level_Parser },
     { "rf24-crc-length", "<value>", 0, 0x107, s_Crc_Length_Arg, Crc_Length_Parser },
+    { "rf24-irq", "RF24 radio interrupt pin. Defaults to 0 (not connected).", 'i', 0x108, s_Dummy_Arg, Irq_Parser },
     { "rf24-show", "Prints radio setup", 0, 0x110, NULL, Dump_Parser },
     { "sleep", "Microseconds to sleep between polls. Defauls to 10000.", 0, 0x111, s_Dummy_Arg, Sleep_Parser },
-    //{ "io-mode", "Select I/O mode. Defaults to line", 0, 0x112, s_Io_Mode_Arg, Io_Mode_Parser },
     { "socket-path", "Path to UNIX socket. Defaults to " RF24_PACKET_ROUTER_SOCKET_PATH, 's', 0x113, s_Dummy_Arg, SocketPath_Parser },
     CMDLOPT_COMMON_OPTIONS,
     CMDLOPT_OPTION_TERMINATOR
 };
+
+static
+ssize_t
+SafePWrite(int fd, const char* ptr, size_t bytes) {
+    ssize_t w;
+    while ((w = pwrite(fd, ptr, bytes, 0)) == -1 && errno == EINTR) {
+        pthread_yield();
+    }
+
+    return w;
+}
 
 static RF24 s_Radio(RPI_GPIO_P1_26, RPI_GPIO_P1_24);
 
@@ -323,7 +341,7 @@ SetupRadio() {
     s_Radio.begin();
     s_Radio.setPALevel(s_PowerLevel);
     s_Radio.setAddressWidth(5); // full 5 byte addresses
-    s_Radio.maskIRQ(true, true, true); // interrupt line not connected
+    s_Radio.maskIRQ(true, true, s_IrqPin == 0); // interrupt line not connected
     s_Radio.setChannel(s_Channel);
     s_Radio.setPayloadSize(s_PayloadSize);
     s_Radio.setAutoAck(false);
@@ -352,17 +370,20 @@ SetupRadio() {
 }
 
 static int s_TimerFd = -1;
+static int s_IrqPinFd = -1;
 
 
 int
 main(int argc, char** argv) {
     int mySocketFD = -1;
     int epollFD = -1;
-    sockaddr_un sa;
+    sockaddr_un sa = {0};
+    epoll_callback_data ecd = {0};
+    epoll_event ev = {0};
     bool semInitialzed = false;
 
     cmdlopt_set_app_name(RF24_PACKET_ROUTER_APP_NAME);
-    cmdlopt_set_app_version("1.1\nCopyright (c) 2016 Jean Gressmann <jean@0x42.de>");
+    cmdlopt_set_app_version("1.2.0\nCopyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>");
     cmdlopt_set_options(s_Options);
     int error = cmdlopt_parse_cmdl(argc, argv, NULL);
 
@@ -418,7 +439,6 @@ main(int argc, char** argv) {
         goto Exit;
     }
 
-    memset(&sa, 0, sizeof(sa));
     sa.sun_family = AF_UNIX;
     strncpy(sa.sun_path, s_SocketPath, sizeof(sa.sun_path) - 1);
     unlink(s_SocketPath); // in case it exists
@@ -442,20 +462,6 @@ main(int argc, char** argv) {
         goto Exit;
     }
 
-//    if (-1 == chown(s_SocketPath, u, g))
-//    {
-//        ERROR("Could not change ownership of socket %s to uid %d, gid %d\n", s_SocketPath, u, g);
-//        error = errno;
-//        goto Exit;
-//    }
-
-    s_TimerFd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
-    if (s_TimerFd < 0) {
-        ERROR("Failed to create timer\n");
-        error = errno;
-        goto Exit;
-    }
-
     epollFD = epoll_loop_create();
     if (epollFD == -1) {
         ERROR("Failed to create epoll instance\n");
@@ -463,8 +469,6 @@ main(int argc, char** argv) {
         goto Exit;
     }
 
-    epoll_event ev;
-    memset(&ev, 0, sizeof(ev));
     ev.data.fd = mySocketFD;
     ev.events = EPOLLIN | EPOLLET;
     if (epoll_ctl(epollFD, EPOLL_CTL_ADD, ev.data.fd, &ev) < 0) {
@@ -473,12 +477,97 @@ main(int argc, char** argv) {
         goto Exit;
     }
 
-    ev.data.fd = s_TimerFd;
-    ev.events = EPOLLIN | EPOLLET;
-    if (epoll_ctl(epollFD, EPOLL_CTL_ADD, ev.data.fd, &ev) < 0) {
-        ERROR("Failed to add timer to epoll\n");
-        error = errno;
-        goto Exit;
+    if (s_IrqPin) {
+        int fd = safe_open("/sys/class/gpio/export", O_WRONLY);
+        if (-1 == fd) {
+            ERROR("Failed to open GPIO export /sys/class/gpio/export for writing\n");
+            error = errno;
+            goto Exit;
+        }
+
+        char buffer[64];
+        int chars = snprintf(buffer, sizeof(buffer), "%d\n", (int)s_IrqPin);
+        int w = SafePWrite(fd, buffer, chars);
+        safe_close(fd);
+        if (-1 == w && errno == EBUSY /* alreayd exported */) {
+            errno = 0;
+        } else {
+            if (-1 == w || w != chars) {
+                ERROR("Failed to export IRQ pin %d\n", (int)s_IrqPin);
+                error = errno;
+                goto Exit;
+            } else {
+                usleep(1000); // TT
+            }
+        }
+// looks like 'in' is automagically set by setting 'edge'
+//        snprintf(buffer, sizeof(buffer), "/sys/class/gpio/gpio%d/direction", (int)s_IrqPin);
+//        fd = safe_open(buffer, O_RDWR);
+//        if (-1 == fd) {
+//            ERROR("Failed to open GPIO IRQ pin direction file %s\n", buffer);
+//            error = errno;
+//            goto Exit;
+//        }
+
+//        w = SafePWrite(fd, "in\n", 3);
+//        safe_close(fd);
+//        if (-1 == w || w != 3) {
+//            ERROR("Failed to set GPIO IRQ pin %d direction to 'in'\n", (int)s_IrqPin);
+//            error = errno;
+//            goto Exit;
+//        }
+
+//        usleep(1000); // TT
+
+
+        snprintf(buffer, sizeof(buffer), "/sys/class/gpio/gpio%d/edge", (int)s_IrqPin);
+        fd = safe_open(buffer, O_RDWR);
+        if (-1 == fd) {
+            ERROR("Failed to open GPIO IRQ pin edge file %s\n", buffer);
+            error = errno;
+            goto Exit;
+        }
+
+        w = SafePWrite(fd, "both\n", 5);
+        safe_close(fd);
+        if (-1 == w || w != 5) {
+            ERROR("Failed to set GPIO IRQ pin %d edge to 'both'\n", (int)s_IrqPin);
+            error = errno;
+            goto Exit;
+        }
+
+        usleep(1000); // TT
+
+        snprintf(buffer, sizeof(buffer), "/sys/class/gpio/gpio%d/value", (int)s_IrqPin);
+        s_IrqPinFd = safe_open(buffer, O_RDONLY | O_NONBLOCK);
+        if (-1 == s_IrqPinFd) {
+            ERROR("Failed to open GPIO IRQ pin value file %s\n", buffer);
+            error = errno;
+            goto Exit;
+        }
+
+        ev.data.fd = s_IrqPinFd;
+        ev.events = EPOLLPRI | EPOLLIN | EPOLLET;
+        if (epoll_ctl(epollFD, EPOLL_CTL_ADD, ev.data.fd, &ev) < 0) {
+            ERROR("Failed to add GPIO IRQ pin to epoll\n");
+            error = errno;
+            goto Exit;
+        }
+    } else {
+        s_TimerFd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK | TFD_CLOEXEC);
+        if (s_TimerFd < 0) {
+            ERROR("Failed to create timer\n");
+            error = errno;
+            goto Exit;
+        }
+
+        ev.data.fd = s_TimerFd;
+        ev.events = EPOLLIN | EPOLLET;
+        if (epoll_ctl(epollFD, EPOLL_CTL_ADD, ev.data.fd, &ev) < 0) {
+            ERROR("Failed to add timer to epoll\n");
+            error = errno;
+            goto Exit;
+        }
     }
 
     error = sem_init(&s_Shutdown, 0, 0);
@@ -493,37 +582,52 @@ main(int argc, char** argv) {
     signal(SIGTERM, SignalHandler);
     signal(SIGPIPE, SIG_IGN);
 
-    epoll_callback_data ecd;
-    memset(&ecd, 0, sizeof(ecd));
-
     ecd.callback = EPollAcceptHandler;
     epoll_loop_set_callback(mySocketFD, ecd);
 
-    ecd.callback = EPollTimerHandler;
-    epoll_loop_set_callback(s_TimerFd, ecd);
+    if (s_IrqPin) {
+        ecd.callback = EPollIrqPinHandler;
+        epoll_loop_set_callback(s_IrqPinFd, ecd);
 
-    itimerspec spec;
-    spec.it_interval.tv_sec = 0;
-    spec.it_interval.tv_nsec = 0;
-    spec.it_value.tv_sec = 0;
-    spec.it_value.tv_nsec = 1;
-    if (timerfd_settime(s_TimerFd, 0, &spec, NULL) < 0) {
-        ERROR("Failed to set timer\n");
-        error = errno;
-        goto Exit;
+        PollRadio();
+    } else {
+        ecd.callback = EPollTimerHandler;
+        epoll_loop_set_callback(s_TimerFd, ecd);
+
+        itimerspec spec;
+        spec.it_interval.tv_sec = 0;
+        spec.it_interval.tv_nsec = 0;
+        spec.it_value.tv_sec = 0;
+        spec.it_value.tv_nsec = 1;
+        if (timerfd_settime(s_TimerFd, 0, &spec, NULL) < 0) {
+            ERROR("Failed to set timer\n");
+            error = errno;
+            goto Exit;
+        }
     }
 
     while (sem_wait(&s_Shutdown) == -1  && errno == EINTR);
 
 Exit:
-    if (s_TimerFd >= 0) {
-        memset(&ecd, 0, sizeof(ecd));
-        epoll_loop_set_callback(s_TimerFd, ecd);
-        safe_close_ref(&s_TimerFd);
+    if (s_IrqPin) {
+        safe_close(s_IrqPinFd);
+        int fd = safe_open("/sys/class/gpio/unexport", O_WRONLY);
+        if (fd >= 0) {
+            char buf[8];
+            int chars = snprintf(buf, sizeof(buf), "%d\n", s_IrqPin);
+            SafePWrite(fd, buf, chars);
+            safe_close(fd);
+        }
+    } else {
+        if (s_TimerFd >= 0) {
+            memset(&ecd, 0, sizeof(ecd));
+            epoll_loop_set_callback(s_TimerFd, ecd);
+            safe_close_ref(&s_TimerFd);
+        }
     }
 
-    memset(&ecd, 0, sizeof(ecd));
     if (mySocketFD >= 0) {
+        memset(&ecd, 0, sizeof(ecd));
         epoll_loop_set_callback(mySocketFD, ecd);
         safe_close(mySocketFD);
         unlink(s_SocketPath);
@@ -650,6 +754,33 @@ EPollConnectionDataHandler(void *ctx, epoll_event *ev) {
     }
 }
 
+static
+void
+PollRadio() {
+    char buffer[MAX_PAYLOAD_SIZE];
+    while (s_Radio.available()) {
+//        DEBUG("Radio available\n");
+//        DEBUG("%u connections\n", (unsigned)(int_used(s_Connections)));
+        s_Radio.read(buffer, s_PayloadSize);
+        for (int* it = int_begin(s_Connections), * end = int_end(s_Connections);
+            it != end; ++it) {
+            ssize_t w = write(*it, buffer, s_PayloadSize);
+            if (w < 0) {
+                switch (errno) {
+                case EINTR:
+                    --it; // re-try connection
+                    break;
+                default:
+                    // ignore all other errors, will get HUP
+                    // in case connection is gone
+                    break;
+                }
+            } else {
+//                DEBUG("Forward to %d\n", *it);
+            }
+        }
+    }
+}
 
 static
 void
@@ -686,29 +817,7 @@ EPollTimerHandler(void *ctx, epoll_event *ev) {
 
         //DEBUG("Timer expired\n");
 
-        char buffer[MAX_PAYLOAD_SIZE];
-        while (s_Radio.available()) {
-            //DEBUG("Radio available\n");
-            //DEBUG("%u connections\n", (unsigned)(int_used(s_Connections)));
-            s_Radio.read(buffer, s_PayloadSize);
-            for (int* it = int_begin(s_Connections), * end = int_end(s_Connections);
-                it != end; ++it) {
-                ssize_t w = write(*it, buffer, s_PayloadSize);
-                if (w < 0) {
-                    switch (errno) {
-                    case EINTR:
-                        --it; // re-try connection
-                        break;
-                    default:
-                        // ignore all other errors, will get HUP
-                        // in case connection is gone
-                        break;
-                    }
-                } else {
-                    //DEBUG("Forward to %d\n", *it);
-                }
-            }
-        }
+        PollRadio();
 
         // re-arm timer
         itimerspec spec;
@@ -723,3 +832,28 @@ EPollTimerHandler(void *ctx, epoll_event *ev) {
         }
     }
 }
+
+static
+void
+EPollIrqPinHandler(void *ctx, epoll_event *ev) {
+    (void)ctx;
+    assert(ev);
+
+    // all three get send in unison ... why?
+//    if (ev->events & EPOLLERR) {
+//        DEBUG("EPOLLERR\n");
+//    }
+
+//    if (ev->events & EPOLLPRI) {
+//        DEBUG("EPOLLPRI\n");
+//    }
+
+//    if (ev->events & EPOLLIN) {
+//        DEBUG("EPOLLIN\n");
+//    }
+
+    if (ev->events & (EPOLLPRI | EPOLLIN)) {
+        PollRadio();
+    }
+}
+

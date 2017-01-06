@@ -5,3 +5,4 @@ black  RPI pin 21 MISO
 brown  RPI pin 19 MOSI
 gray   RPI pin 20 GND
 white  RPI pin 17 3V3
+       RPI pin 22 IRQ
