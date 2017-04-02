@@ -12,7 +12,7 @@ The devices periodically send their sensor readings to the RPI by means of Nordi
 
 When a sensor device is first powered up it monitors the radio for a clock source. A clock source can be either the RPI which provides the master clock or another, properly synced, sensor device.
 
-Once the device detects the clock it goes to sleep until the next _send_ interval. When the time comes the device is wakes up, takes an enviromental reading, and transmits the result to the RPI. At the end of this short _send period_ the sensor goes back to sleep.  
+Once the device detects the clock it goes to sleep until the next _send_ interval. When the time comes the device is wakes up, takes an enviromental reading, and transmits the result to the RPI. At the end of this short _send period_ the sensor goes back to sleep.
 
 
 ### Network Topology
@@ -24,9 +24,9 @@ The sensor devices and the RPI form a mesh network. Routing in the network is do
 
 ### Power supply and power consumption
 
-Given the sensor device is designed to run on batteries it has to be operated on D.C. current with a max. input voltage of 6V. I have seen the device work correctly with input voltages as low as 3.5V. 
+Given the sensor device is designed to run on batteries it has to be operated on D.C. current with a max. input voltage of 6V. I have seen the device work correctly with input voltages as low as 3.5V.
 
-Typical power consumption is around 25uA when the device is asleep and 15mA when active. 
+Typical power consumption is around 25uA when the device is asleep and 15mA when active.
 
 Under optimal conditions, the sensor can function on the battery for more than a year. However, failure to sync the device clock to the master clock cause it to enter a power consuming monitoring state. If this state persists AAA batteries are typically drained within days.
 
@@ -43,10 +43,10 @@ You will need to build the sensor devices. The parts are approx. EUR 10 per devi
 You'll also need to solder a capacitor to an RF24 radio chip and connect it to the RPI. Otherwise the radio will most likely not work due to power fluctuations. I use a 1uF capacitor which seems to do the trick.
 
 
-Other than the device parts and some soldering skills you will need 
+Other than the device parts and some soldering skills you will need
 
 * An avrdude compatible AVR programmer like [usbasp](http://www.fischl.de/usbasp/)
-* a serial/COM port or an USB to serial adaptor to connect to the device UART 
+* a serial/COM port or an USB to serial adaptor to connect to the device UART
 * a terminal program to communicate over the serial connection (I use picocom)
 
 
@@ -57,7 +57,7 @@ To build the device firmware you will need
 * an Atmel (AVR) toolchain (libc, gcc, binutils) to build the firmware
 * avrdude to upload the device firmware
 * cmake 3.0 or better
- 
+
 If your are on Debian Linux
 
 ```
@@ -66,9 +66,9 @@ $ sudo apt-get install avrdude avr-libc gcc-avr binutils-avr
 
 should get you set up.
 
-### Building the device software 
+### Building the device software
 
-Get the sources, then run `cmake` on `src/avr/weatherbug` to configure the build environment. Then run `make` (or whatever tool the cmake generated build instructions for) to build the firmware. Once the firmware image has been built, you can upload it to the device using `make flash_1.2` (assuming you use an usbasp compatible AVR programmer). Otherwise you will need to call `avrdude` with the right parameters for your device. 
+Get the sources, then run `cmake` on `src/avr/weatherbug` to configure the build environment. Next, run `make` (or whatever tool the cmake generated build instructions for) to build the firmware. Once the firmware image has been built, you can upload it to the device using `make flash_1.2` (assuming you use an usbasp compatible AVR programmer). Otherwise you will need to call `avrdude` with the right parameters for your device.
 
 
 ### Building the RPI software
@@ -98,7 +98,7 @@ This is Weatherbug version .....
 
 During the first 10 seconds after power on or reset, the device is in bootstrap mode and will accept commands via the terminal. Type `?`+ENTER (the ? character followed by the ENTER key) to see a list of commands. Switch the device to service mode by typing `!serv`+ENTER.
 
-Once in service mode you can configure the device using the various `!` commands. Type `?`+ENTER to see what's available. 
+Once in service mode you can configure the device using the various `!` commands. Type `?`+ENTER to see what's available.
 
 Most settings are applied immediately and are not persisted so you can play around with them to try things out. If you muck up, simply reset the device and it will be back to its original configuration. To save your changes type `!cfst`+ENTER at the prompt.
 
@@ -113,11 +113,11 @@ When you are finished, type `!dflt`+ENTER to return to default mode.
 
  must be identical.
 
-1. The payload size must be set to 32 bytes and the CRC to 16 bit on the RPI. These are the default settings for `rf24-packet-router` so everthing _should_ work out of the box. 
+1. The payload size must be set to 32 bytes and the CRC to 16 bit on the RPI. These are the default settings for `rf24-packet-router` so everything _should_ work out of the box.
 
 1. Each device as well as the RPI must have a _unique_ network id.
 
-1. The network id `0xff` is reserved as the broadcast address.  
+1. The network id `0xff` is reserved as the broadcast address.
 
 ## Start the monitoring software on the RPI
 
@@ -133,7 +133,7 @@ Then start the network which will handle the master clock generation, routing, a
 $ rf24-network -i <network id> &
 ```
 
-And finally start 
+And finally start
 
 ```
 $ rf24-tcp | tee sensor.log
@@ -146,7 +146,7 @@ to dump TCP messages to console and file.
 
 Let's face it. Things don't always work perfectly. For radio related issues there are two helper programs available to track down communication issues.
 
-`rf24-ping` continously sends ping messages to the broadcast address. 
+`rf24-ping` continously sends ping messages to the broadcast address.
 `rf24-echo` prints whatever it receives to stdout/USART0.
 
 ## License
