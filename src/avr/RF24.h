@@ -138,14 +138,11 @@ extern "C" {
 #define RF24_ADDR_WITDH_4   2
 #define RF24_ADDR_WITDH_5   3
 
-<<<<<<< HEAD
-=======
 /* Features */
 #define RF24_FEAT_EN_DPL        0x4
 #define RF24_FEAT_EN_ACK_PAY    0x2
 #define RF24_FEAT_EN_DYN_ACK    0x1
 
->>>>>>> r2
 
 
 /* Run RF24 command over SPI */
@@ -334,11 +331,7 @@ void RF24_Dump(FILE* f);
 
 /* Polls for received data.
  *
-<<<<<<< HEAD
- * Invokes RF24_InterruptHandler if there is.
-=======
  * Invokes RF24_InterruptHandler if there is data.
->>>>>>> r2
  */
 void RF24_Poll();
 

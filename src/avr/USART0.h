@@ -39,10 +39,7 @@ extern "C" {
         /* 2400 us works for Arduino to ensure data hits receiver @ 9600 */ \
         switch ((long)BAUD) { \
         default: case 9600L: _delay_us(2400); break; \
-<<<<<<< HEAD
-=======
         case 38400L: _delay_us(800); break; \
->>>>>>> r2
         case 57600L: _delay_us(400); break; \
         case 115200L: _delay_us(200); break; \
         } \

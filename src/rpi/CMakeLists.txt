@@ -10,11 +10,7 @@ set(CPACK_DEBIAN_PACKAGE_SECTION misc)
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "RF24 sensor network")
 set(RF24_VERSION_MAJOR 1)
-<<<<<<< HEAD
-set(RF24_VERSION_MINOR 0)
-=======
 set(RF24_VERSION_MINOR 1)
->>>>>>> r2
 set(RF24_VERSION_PATCH 0)
 set(RF24_VERSION_TAG "")
 
@@ -56,7 +52,8 @@ set(LIB_SOURCES
     3rd-party/toe/src/buffer.c
     3rd-party/toe/src/stack.c
     3rd-party/linuxapi/src/utility.c
-    3rd-party/linuxapi/src/epoll.c)
+    3rd-party/linuxapi/src/epoll.c
+    rf24_common.cpp)
 
 add_library(common STATIC ${LIB_SOURCES})
 

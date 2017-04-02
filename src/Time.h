@@ -1,10 +1,6 @@
 /* The MIT License (MIT)
  *
-<<<<<<< HEAD
- * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
-=======
  * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
->>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +21,8 @@
  * THE SOFTWARE.
  */
 
-<<<<<<< HEAD
-#ifndef TIME_H
-#define TIME_H
-=======
 #ifndef TIME585858_H
 #define TIME585858_H
->>>>>>> r2
 
 #include <stdint.h>
 
@@ -65,19 +56,12 @@ uint32_t Time_MillisecondsTillNextWindow();
 void Time_NotifyStartListening(uint8_t scan);
 void Time_NotifyStopListening();
 void Time_SetStratum(int16_t stratum);
-<<<<<<< HEAD
-=======
 void Time_BroadcastTime();
->>>>>>> r2
 
 
 #ifdef __cplusplus
 }
 #endif
 
-<<<<<<< HEAD
-#endif /* TIME_H */
-=======
 #endif /* TIME585858_H */
->>>>>>> r2
 

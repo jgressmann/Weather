@@ -53,11 +53,7 @@ extern FILE* s_FILE_Debug;
 
 
 #define ASSERT_FILE(x, codeToRunOnFail, file) \
-<<<<<<< HEAD
-    do {\
-=======
     do { \
->>>>>>> r2
         if (!(x)) { \
             DEBUG_P("%s(%d): ASSERTION FAILED %s\n", file, __LINE__, STRINGIFY(x)); \
             codeToRunOnFail; \

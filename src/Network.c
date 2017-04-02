@@ -1,10 +1,6 @@
 /* The MIT License (MIT)
  *
-<<<<<<< HEAD
- * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
-=======
  * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
->>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

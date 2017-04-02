@@ -1,10 +1,6 @@
 /* The MIT License (MIT)
  *
-<<<<<<< HEAD
- * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
-=======
  * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
->>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -57,8 +53,6 @@
 // tailored for short send/receive intervals
 
 
-<<<<<<< HEAD
-=======
 #ifdef AVR
 #   include <util/crc16.h>
 #else
@@ -84,7 +78,6 @@ _crc8_ccitt_update (uint8_t inCrc, uint8_t inData) {
 
 
 
->>>>>>> r2
 typedef struct _UnacknowledgedPacket {
     struct _UnacknowledgedPacket* Next;
     uint32_t TimeSent;
@@ -127,16 +120,11 @@ typedef struct {
     uint8_t Destination;
     uint8_t Ack     : 1;
     uint8_t Size    : 5;
-<<<<<<< HEAD
-=======
     uint8_t Crc;
->>>>>>> r2
     uint8_t Data[TCP_PAYLOAD_SIZE];
 } TCP_Payload;
 
 
-<<<<<<< HEAD
-=======
 
 static
 void
@@ -163,7 +151,6 @@ IsChecksumValid(TCP_Payload* tcp) {
     return loaded == computed;
 }
 
->>>>>>> r2
 static
 PeerData*
 FindPeer(uint8_t id) {
@@ -239,12 +226,6 @@ TCP_Update() {
             if (!IsInWindow32(now, TCP_ACK_TIMEOUT, entry->TimeSent)) {
                 entry->TimeSent = now;
                 ++entry->Count;
-<<<<<<< HEAD
-                TCP_Payload* payload = (TCP_Payload*)&entry->Packet.Payload;
-                payload->Via = Batman_Route(payload->Destination); // routing info may have changed
-                Network_Send(&entry->Packet);
-                DEBUG_P("TCP: rt %u to %02x via %02x (%u)\n", payload->Seq, payload->Destination, payload->Via, entry->Count);
-=======
                 TCP_Payload* tcp = (TCP_Payload*)&entry->Packet.Payload;
                 uint8_t newVia = Batman_Route(tcp->Destination); // routing info may have changed
                 if (newVia != tcp->Via) {
@@ -253,7 +234,6 @@ TCP_Update() {
                 }
                 Network_Send(&entry->Packet);
                 DEBUG_P("TCP: rt %u to %02x via %02x (%u)\n", tcp->Seq, tcp->Destination, tcp->Via, entry->Count);
->>>>>>> r2
             }
         }
     }
@@ -266,11 +246,8 @@ TCP_Process(NetworkPacket* packet) {
     ASSERT_FILE(packet->Type == TCP_PACKET_TYPE, return, "tcp");
 
     TCP_Payload* tcp = (TCP_Payload*)packet->Payload;
-<<<<<<< HEAD
-=======
 
 
->>>>>>> r2
     // drop packets that don't have a proper sender
     if (tcp->Sender == NETWORK_BROADCAST_ADDRESS) {
         return;
@@ -282,15 +259,12 @@ TCP_Process(NetworkPacket* packet) {
         return;
     }
 
-<<<<<<< HEAD
-=======
     // drop packets with invalid checksum
     if (!IsChecksumValid(tcp)) {
         DEBUG_P("TCP: checksum failure, from %02x via %02x to %02x\n", tcp->Sender, tcp->Via, tcp->Destination);
         return;
     }
 
->>>>>>> r2
     if (tcp->Destination == myid) {
         PeerData* sender = GetOrCreatePeer(tcp->Sender);
         if (!sender) {
@@ -375,10 +349,7 @@ TCP_Process(NetworkPacket* packet) {
 
                 DEBUG_P("TCP: send ack till %u to %02x via %02x\n", tcp->Seq, tcp->Destination, tcp->Via);
 
-<<<<<<< HEAD
-=======
                 StoreChecksum(tcp);
->>>>>>> r2
                 Network_Send(packet);
             }
 
@@ -425,10 +396,7 @@ TCP_Process(NetworkPacket* packet) {
 
                 DEBUG_P("TCP: fw from %02x via %02x to %02x ttl %u\n", tcp->Sender, tcp->Via, tcp->Destination, packet->TTL);
 
-<<<<<<< HEAD
-=======
                 StoreChecksum(tcp);
->>>>>>> r2
                 Network_Send(packet);
             }
         }
@@ -471,20 +439,6 @@ TCP_Send(uint8_t destination, const uint8_t *ptr, uint8_t size) {
         packet->TTL = Network_GetTtl();
         packet->Type = TCP_PACKET_TYPE;
 
-<<<<<<< HEAD
-        TCP_Payload* payload = (TCP_Payload*)packet->Payload;
-        payload->Ack = 0;
-        payload->Sender = myid;
-        payload->Seq = peer->SendSequenceNumber++;
-        payload->Size = size;
-        payload->Destination = destination;
-        payload->Via = Batman_Route(payload->Destination);
-
-        memcpy(payload->Data, ptr, size);
-
-        Network_Send(packet);
-        DEBUG_P("TCP: seq %u send to %02x via %02x\n", payload->Seq, payload->Destination, payload->Via);
-=======
         TCP_Payload* tcp = (TCP_Payload*)packet->Payload;
         tcp->Ack = 0;
         tcp->Sender = myid;
@@ -498,7 +452,6 @@ TCP_Send(uint8_t destination, const uint8_t *ptr, uint8_t size) {
         StoreChecksum(tcp);
         Network_Send(packet);
         DEBUG_P("TCP: seq %u send to %02x via %02x\n", tcp->Seq, tcp->Destination, tcp->Via);
->>>>>>> r2
     }
 }
 

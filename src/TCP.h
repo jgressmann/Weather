@@ -1,10 +1,6 @@
 /* The MIT License (MIT)
  *
-<<<<<<< HEAD
- * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
-=======
  * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
->>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -38,11 +34,7 @@ extern "C" {
 
 
 #define TCP_PACKET_TYPE          0x02
-<<<<<<< HEAD
-#define TCP_PAYLOAD_SIZE        (NETWORK_PACKET_PAYLOAD_SIZE-5)
-=======
 #define TCP_PAYLOAD_SIZE        (NETWORK_PACKET_PAYLOAD_SIZE-6)
->>>>>>> r2
 
 typedef void (*TCP_DataReceivedCallback)(uint8_t sender, const uint8_t* payload, uint8_t size);
 

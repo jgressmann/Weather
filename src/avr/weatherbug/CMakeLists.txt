@@ -9,11 +9,7 @@ add_definitions(-DNDEBUG)
 #add_definitions(-DBATMAN_DEBUG)
 #add_definitions(-DTIME_DEBUG)
 #add_definitions(-DTCP_DEBUG)
-<<<<<<< HEAD
 
-=======
-#add_definitions(-DTMR_TIMER1)
->>>>>>> r2
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall")
@@ -22,11 +18,8 @@ set(SOURCES
     ${SOURCES}
     Watchdog.c
     Watchdog.h
-<<<<<<< HEAD
-=======
     Timer.c
     Timer.h
->>>>>>> r2
     ../USART0.c
     ../USART0.h
     ../Debug.h
@@ -47,39 +40,27 @@ set(SOURCES
     ../RF24.h
     main.cpp)
 
-<<<<<<< HEAD
-=======
 
 if(NOT F_CPU)
     set(F_CPU 8000000) # default for HWRV 1.2
 endif()
 
->>>>>>> r2
+
 # Soooo for some mpus 57600 works
 AvrTarget(
     TARGET ${PROJECT_NAME}
     MCU atmega328p
-<<<<<<< HEAD
-    F_CPU 8000000
-=======
     F_CPU ${F_CPU}
->>>>>>> r2
     BAUD 38400
     PRINTFMIN
     ${SOURCES})
 
 add_custom_target(
     flash_r1.2
-<<<<<<< HEAD
-    # this is for internal RC osc. @ 8Mhz
-    #COMMAND avrdude $$AVRDUDE_OPTIONS -v -p atmega328p -c usbasp -U flash:w:${PROJECT_NAME}.hex:i -U lfuse:w:0xe2:m -U hfuse:w:0xd6:m -U efuse:w:0xff:m
-    # this is for external full swing crystal @ 8+Mhz
-=======
     # See http://www.engbedded.com/fusecalc
     # this is for internal RC osc. @ 8Mhz
     #COMMAND avrdude $$AVRDUDE_OPTIONS -v -p atmega328p -c usbasp -U flash:w:${PROJECT_NAME}.hex:i -U lfuse:w:0xe2:m -U hfuse:w:0xd6:m -U efuse:w:0xff:m
     # this is for external full swing crystal @ 0.4-22 Mhz
->>>>>>> r2
     COMMAND avrdude $$AVRDUDE_OPTIONS -v -p atmega328p -c usbasp -U flash:w:${PROJECT_NAME}.hex:i -U lfuse:w:0xf7:m -U hfuse:w:0xd6:m -U efuse:w:0xff:m
     DEPENDS ${PROJECT_NAME}.hex ${PROJECT_NAME}.eep.hex)
 

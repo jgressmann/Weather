@@ -1,10 +1,6 @@
 /* The MIT License (MIT)
  *
-<<<<<<< HEAD
- * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
-=======
  * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
->>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,17 +33,11 @@ extern "C" {
 #define NETWORK_BROADCAST_ADDRESS   0xff
 #define NETWORK_RXTX_DURATION       (UINT32_C(1<<14)) // 16s
 //#define NETWORK_RXTX_DURATION       (UINT32_C(1<<13)) // 8s
-<<<<<<< HEAD
-//#define NETWORK_PERIOD     (UINT32_C(75)*NETWORK_RXTX_DURATION) // 20mins @ 16s listen
-#define NETWORK_PERIOD     (UINT32_C(18)*NETWORK_RXTX_DURATION) // 5mins @ 16s listen
-
-=======
 
 //#define NETWORK_PERIOD     (UINT32_C(8)*NETWORK_RXTX_DURATION) // 2mins
 //#define NETWORK_PERIOD     (UINT32_C(18)*NETWORK_RXTX_DURATION) // 5mins
 //#define NETWORK_PERIOD     (UINT32_C(37)*NETWORK_RXTX_DURATION) // 10mins
 #define NETWORK_PERIOD     (UINT32_C(75)*NETWORK_RXTX_DURATION) // 20mins
->>>>>>> r2
 
 #define NETWORK_PACKET_PAYLOAD_SIZE 31
 

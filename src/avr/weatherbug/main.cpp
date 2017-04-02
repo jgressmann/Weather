@@ -16,10 +16,7 @@
 
 
 #include "Watchdog.h"
-<<<<<<< HEAD
-=======
 #include "Timer.h"
->>>>>>> r2
 #include "../../Misc.h"
 #include "../Debug.h"
 #include "../USART0.h"
@@ -34,11 +31,6 @@
 #include "../../TCP.h"
 #include "../DHT.h"
 
-<<<<<<< HEAD
-// Atmel doc, p. 51 & 55
-#define MAX_WDT_SLEEP_MS 8192
-
-=======
 //#define ACTIVE_SLEEP
 #define WATCHDOG_SLEEP
 //#define TIMER2_SLEEP
@@ -127,7 +119,6 @@ static volatile WatchdogData s_WATCH NOINIT;
 /* - USART0                                                                   */
 /* - RF24                                                                     */
 /******************************************************************************/
->>>>>>> r2
 #define FEAT_USART0     0
 #define FEAT_RF24       1
 
@@ -223,14 +214,11 @@ FEAT_Available(uint8_t features) {
 }
 
 
-<<<<<<< HEAD
-=======
 /******************************************************************************/
 /* Timed work queue (WORK)                                                    */
 /*                                                                            */
 /* Clients can register for callbacks at a given time int the future.         */
 /******************************************************************************/
->>>>>>> r2
 typedef void (*WorkCallback)(void* ctx);
 typedef struct _Work_Item {
     uint32_t TimeTillUpdate;
@@ -281,19 +269,11 @@ WORK_Update(uint32_t elapsed) {
     for (uint8_t i = s_Work_ItemCount - 1; i < s_Work_ItemCount; --i) {
         if (s_Work_Items[i].TimeTillUpdate <= elapsed) {
             s_Work_Items[i].TimeTillUpdate = 0;
-<<<<<<< HEAD
-            //DEBUG_P("Work: %" PRIu32 " idx %d\n", Time_Now(), i);
-            s_Work_Items[i].Callback(s_Work_Items[i].Ctx);
-        } else {
-            s_Work_Items[i].TimeTillUpdate -= elapsed;
-            //DEBUG_P("Work: %" PRIu32 " idx %d: %" PRIu32 "\n", Time_Now(), i, s_Work_Items[i].TimeTillUpdate);
-=======
 //            DEBUG_P("Work: %" PRIu32 " idx %d\n", Time_Now(), i);
             s_Work_Items[i].Callback(s_Work_Items[i].Ctx);
         } else {
             s_Work_Items[i].TimeTillUpdate -= elapsed;
 //            DEBUG_P("Work: %" PRIu32 " idx %d: %" PRIu32 "\n", Time_Now(), i, s_Work_Items[i].TimeTillUpdate);
->>>>>>> r2
         }
     }
 }
@@ -331,104 +311,6 @@ WORK_Init() {
     s_Work_ItemCount = 0;
 }
 
-<<<<<<< HEAD
-
-static volatile uint8_t s_SendsQueued;
-static
-void
-RF24_BatchSendCallback(void*) {
-//    ASSERT_INTERRUPTS_OFF(return, "main");
-    WORK_Remove(RF24_BatchSendCallback);
-    s_SendsQueued = 0;
-    if (FEAT_Available(_BV(FEAT_RF24))) {
-        RF24_TxQueueProcess();
-    } else {
-        //DEBUG_P("psq clear\n");
-        RF24_TxQueueClear();
-    }
-}
-
-static
-void
-RF24_QueueForBatchSend(uint8_t* ptr, uint8_t size) {
-//    ASSERT_FILE(ptr, return, "main");
-//    ASSERT_FILE(size, return, "main");
-//    ASSERT_INTERRUPTS_OFF(return, "main");
-    if (FEAT_Available(_BV(FEAT_RF24))) {
-Retry:
-        if (!RF24_TxQueueSubmit(ptr, size)) {
-            RF24_TxQueueProcess();
-            goto Retry;
-        }
-
-        if (!s_SendsQueued) {
-            WORK_AddEx(NULL, RF24_BatchSendCallback);
-        }
-
-        ++s_SendsQueued;
-//            DEBUG_P("qfs %u\n", s_SendsQueued);
-    } else {
-        if (s_SendsQueued) {
-            s_SendsQueued = 0;
-            WORK_Remove(RF24_BatchSendCallback);
-            RF24_TxQueueClear();
-        }
-    }
-}
-
-
-#define DHT_Uninit() \
-    do { \
-        /* don't ask me why but this needs to be like so */ \
-        DDRD |= _BV(PD5); \
-        PORTD &= ~(_BV(PD5) | _BV(PD6)); \
-        DDRD &= ~_BV(PD6); \
-    } while (0)
-
-
-#define DHT_Init() \
-    do { \
-        /* data & power line to low */ \
-        PORTD &= ~(_BV(PD5) | _BV(PD6)); \
-        /* turn on power to DHT */ \
-        DDRD |= _BV(PD5); \
-        PORTD |= _BV(PD5); \
-    } while (0)
-
-
-enum {
-    MODE_STATE_UNINITIALIZED = -1,
-    MODE_STATE_INITIAL = 0,
-    MODE_STATE_SERVICE = 1,
-    MODE_STATE_DEFAULT = 2,
-};
-
-
-struct ModeContext {
-    uint32_t StartOfInterval;
-    DHT_Context DHTContext;
-    uint16_t Iterations;
-    uint8_t USART0Index;
-    int8_t CurrentState;
-    uint8_t TargetState         : 2;
-    uint8_t Enter               : 1;
-    uint8_t Interval            : 1;
-    uint8_t FeaturesReleased    : 1;
-    uint8_t Run                 : 1;
-    uint8_t DHTTries;
-    uint8_t Temperature;
-    uint8_t Humidity;
-    char USART0Buffer[32];
-};
-
-static ModeContext s_ModeContext NOINIT;
-
-#define RF24_PIPE_BASE_ADDRESS 0xdeadbeef
-
-
-
-
-=======
 /*******************************************************************************
  * Sensor correction (CORR)
  ******************************************************************************/
@@ -619,7 +501,6 @@ CORR_Lookup(Curve* c, int8_t v) {
 /******************************************************************************/
 /* MCUSR register save to determine boot reason                               */
 /******************************************************************************/
->>>>>>> r2
 /* save MCUSR early on to figure out why we booted */
 static uint8_t s_Mcusr NOINIT;
 static void Bootstrap() __attribute__((naked,used,section(".init3")));
@@ -629,23 +510,11 @@ static void Bootstrap() {
     WDT_Off();
 }
 
-<<<<<<< HEAD
-#define NAME "Weatherbug"
-#define VERSION_MAJOR 2
-#define VERSION_MINOR 5
-#define VERSION_PATCH 0
-#define NODE_NAME_BUFFER_LENGTH 7
-#define NODE_NAME_BUFFER_SIZE (NODE_NAME_BUFFER_LENGTH + 1)
-static const char s_VersionString_P[] PROGMEM = NAME " " STRINGIFY(VERSION_MAJOR) "." STRINGIFY(VERSION_MINOR) "." STRINGIFY(VERSION_PATCH);
-static const char DHT_Error_P[] PROGMEM = "DHT error %d\n";
-static const char Network_Address_Format_P[] PROGMEM = "%#02x\n";
-=======
 
 
 /******************************************************************************/
 /* Configuration load/store/default (CONF)                                    */
 /******************************************************************************/
->>>>>>> r2
 
 enum {
     DHT11,
@@ -658,13 +527,10 @@ struct {
     uint8_t Unused : 4;
 } s_Flags NOINIT;
 
-<<<<<<< HEAD
-=======
 #define HUM_CORR_COUNT 5
 #define TMP_CORR_COUNT 2
 #define BAT_CORR_COUNT 2
 
->>>>>>> r2
 
 #define INITIALIZED_SIGNATURE ((uint16_t)(((uint16_t)('J') << 8) | 'G'))
 static uint16_t s_EEP_Initialized EEMEM;
@@ -675,152 +541,10 @@ static uint8_t s_EEP_RF24_DataRate EEMEM;
 static uint8_t s_EEP_Network_MyId EEMEM;
 static uint8_t s_EEP_Network_TargetId EEMEM;
 static uint8_t s_EEP_Network_Ttl EEMEM;
-<<<<<<< HEAD
-static uint8_t s_EEP_BATV_Offset EEMEM;
-static uint8_t s_EEP_DHT_Temperature_Offset EEMEM;
-static uint8_t s_EEP_DHT_Humidity_Offset EEMEM;
-static uint16_t s_EEP_DHT_Humidity_Factor EEMEM;
-=======
->>>>>>> r2
 static uint8_t s_RF24_Channel NOINIT;
 static char s_Name[NODE_NAME_BUFFER_SIZE] NOINIT;
 static uint8_t s_RF24_DataRate NOINIT;
 static uint8_t s_Network_TargetId NOINIT;
-<<<<<<< HEAD
-static int8_t s_BATV_Offset NOINIT;
-static int8_t s_DHT_Temperature_Offset NOINIT;
-static int8_t s_DHT_Humidity_Offset NOINIT;
-static int16_t s_DHT_Humidity_Factor NOINIT;
-
-
-
-#define Flush(x) USART0_SendFlush()
-
-static FILE* s_FILE_USART0;
-static
-int
-USART0_PutChar(char c, FILE *stream) {
-    (void)stream;
-    USART0_SendByte(c);
-    return 0;
-}
-
-static
-int
-USART0_GetChar(FILE *stream) {
-    (void)stream;
-    if (USART0_HasReceivedByte()) {
-        return USART0_FetchReceivedByte();
-    }
-
-    return EOF;
-}
-
-
-static const char Error_Prefix_P[] PROGMEM = "ERROR ";
-static const char OK_P[] PROGMEM = "OK\n";
-#define DHT_A_SCALE 256
-#define DHT_A_SHIFT 8
-
-
-#define SendError(stream, fmt, ...) \
-    do { \
-        fprintf_P(stream, Error_Prefix_P); \
-        fprintf_P(stream, fmt, __VA_ARGS__); \
-    } while (0)
-
-#define SendOK(stream) fprintf_P(stream, OK_P)
-
-
-static
-inline
-void
-PrintHelp(FILE* stream) {
-    const char* helpString = PSTR(
-        "Usage:\n"
-        "  ?     : prints this help\n"
-
-        "  !cfad : activates default configuration\n"
-        "  !cfld : loads configuration from EEPROM\n"
-        "  !cfst : stores configuration to EEPROM\n"
-
-        "  ?btvl : read battery voltage\n"
-        "  ?btvo : read battery voltage offset\n"
-        "  !btvo : <value> write battery voltage offset\n"
-
-        "  !dflt : activates default mode\n"
-        "  ?dhtr : read DHT sensor\n"
-        "  ?dhtt : read DHT sensor type (0 == DHT11, 1 == DHT22)\n"
-        "  !dhtt : <value> write DHT sensor type\n"
-
-        "  ?mcsr : read MCUSR from boot\n"
-
-        "  ?name : read node name\n"
-        "  !name : write node name (7 chars)\n"
-        "  ?nmid : read my network id\n"
-        "  !nmid : <value> write my network id\n"
-        "  ?ntid : read target network id\n"
-        "  !ntid : <value> write target network id\n"
-        "  ?nttl : read network packet TTL\n"
-        "  !nttl : <value> write network packet TTL\n"
-
-        "  ?rchl : read RF24 radio channel\n"
-        "  !rchl : <value> write RF24 radio channel\n"
-        "  ?rdtr : read RF24 data rate\n"
-        "  !rdtr : <value> write RF24 data rate (0=250KBPS, 1=1MPBS, 2=2MBPS)\n"
-        "  ?rdmp : dump RF24 state\n"
-        "  ?rpwr : read RF24 radio power setting (min = 0, 3 = max)\n"
-        "  !rpwr : <value> write RF24 power setting\n"
-        "  !rset : soft reset device\n"
-
-        "  !serv : activates service mode\n"
-        "  ?snha : read DHT hum. factor a ." STRINGIFY(DHT_A_SCALE) ", line fit\n"
-        "  !snha : <value> write DHT hum. factor a ." STRINGIFY(DHT_A_SCALE) ", line fit\n"
-        "  ?snhb : read DHT hum. offset b, line fit\n"
-        "  !snhb : <value> write DHT hum. offset b, line fit\n"
-        "  ?snto : read DHT temperature offset .1\n"
-        "  !snto : <value> write DHT temperature offset\n"
-
-        "  ?vers : prints the firmware version\n"
-
-    );
-
-    fprintf_P(stream, helpString);
-}
-
-
-static
-void
-CONF_Load() {
-    s_RF24_Channel = eeprom_read_byte(&s_EEP_RF24_Channel);
-    *reinterpret_cast<uint8_t*>(&s_Flags) = eeprom_read_byte(&s_EEP_Flags);
-    eeprom_read_block(s_Name, s_EEP_Name, sizeof(s_Name));
-    s_RF24_DataRate = eeprom_read_byte(&s_EEP_RF24_DataRate);
-    Network_SetAddress(eeprom_read_byte(&s_EEP_Network_MyId));
-    s_Network_TargetId = eeprom_read_byte(&s_EEP_Network_TargetId);
-    Network_SetTtl(eeprom_read_byte(&s_EEP_Network_Ttl));
-    s_BATV_Offset = (int8_t)eeprom_read_byte(&s_EEP_BATV_Offset);
-    s_DHT_Temperature_Offset = (int8_t)eeprom_read_byte(&s_EEP_DHT_Temperature_Offset);
-    s_DHT_Humidity_Offset = (int8_t)eeprom_read_byte(&s_EEP_DHT_Humidity_Offset);
-    s_DHT_Humidity_Factor = (int16_t)eeprom_read_word(&s_EEP_DHT_Humidity_Factor);
-}
-
-static
-void
-CONF_Store() {
-    eeprom_write_byte(&s_EEP_DHT_Temperature_Offset, s_DHT_Temperature_Offset);
-    eeprom_write_word(&s_EEP_DHT_Humidity_Factor, s_DHT_Humidity_Factor);
-    eeprom_write_byte(&s_EEP_DHT_Humidity_Offset, s_DHT_Humidity_Offset);
-    eeprom_write_byte(&s_EEP_BATV_Offset, s_BATV_Offset);
-    eeprom_write_byte(&s_EEP_Network_Ttl, Network_GetTtl());
-    eeprom_write_byte(&s_EEP_Network_TargetId, s_Network_TargetId);
-    eeprom_write_byte(&s_EEP_Network_MyId, Network_GetAddress());
-    eeprom_write_block(s_Name, s_EEP_Name, sizeof(s_Name));
-    eeprom_write_byte(&s_EEP_Flags, *reinterpret_cast<const uint8_t*>(&s_Flags));
-    eeprom_write_byte(&s_EEP_RF24_DataRate, s_RF24_DataRate);
-    eeprom_write_byte(&s_EEP_RF24_Channel, s_RF24_Channel);
-    eeprom_write_word(&s_EEP_Initialized, INITIALIZED_SIGNATURE);
-=======
 static int8_t s_Humidity_Corr_Values[HUM_CORR_COUNT] EEMEM;
 static int8_t s_Humidity_Corr_Offsets[HUM_CORR_COUNT] EEMEM;
 static int8_t s_Temperature_Corr_Values[TMP_CORR_COUNT] EEMEM;
@@ -989,78 +713,10 @@ ISR(PCINT0_vect) {
     if (FEAT_Available(_BV(FEAT_RF24))) {
         WORK_AddEx(NULL, RF24_OfflineReceiveHandler);
     }
->>>>>>> r2
 }
 
 static
 void
-<<<<<<< HEAD
-CONF_ActivateDefault() {
-    s_RF24_Channel = 76; // see RF24.cpp, begin()
-    s_Flags.RF24_Power = RF24_TX_PWR_MAX;
-    s_Flags.DHT_Type = DHT11;
-    s_Flags.Unused = 0;
-    strcpy_P(s_Name, PSTR("fixme"));
-    s_RF24_DataRate = RF24_DR_2MBPS;
-    Network_SetAddress(0xff);
-    s_Network_TargetId = 0xff;
-    Network_SetTtl(0xff);
-    s_BATV_Offset = 0;
-    s_DHT_Temperature_Offset = 0;
-    s_DHT_Humidity_Offset = 0;
-    s_DHT_Humidity_Factor = DHT_A_SCALE;
-}
-
-
-static
-int8_t
-TryParseULong(const char* str, unsigned long* value, int8_t base) {
-    char* end;
-
-    // abcdef are stop chars
-    end = NULL;
-    *value = strtoul(str, &end, base);
-    if (end && end != str) {
-        return 1;
-    }
-
-    return 0;
-}
-
-static
-int8_t
-TryParseLong(const char* str, long* value, int8_t base) {
-    char* end;
-
-    // abcdef are stop chars
-    end = NULL;
-    *value = strtol(str, &end, base);
-    if (end && end != str) {
-        return 1;
-    }
-
-    return 0;
-}
-
-
-static void RF24_Init();
-static uint16_t BATV_Read();
-static uint16_t BATV_ToMilliVolt(uint16_t counts);
-
-
-static
-inline
-void SEN_Correct(uint8_t temperature, uint8_t humidity, uint8_t& outTemperature, uint8_t& outHumidity) {
-    uint16_t t = temperature, h = humidity;
-    t *= 10;
-    t += s_DHT_Temperature_Offset;
-    t /= 10;
-    outTemperature = t;
-    h *= s_DHT_Humidity_Factor;
-    h >>= DHT_A_SHIFT;
-    h += s_DHT_Humidity_Offset;
-    outHumidity = h;
-=======
 RF24_Init() {
     // We don't know in what state we get the device so
     // reset everything
@@ -1190,7 +846,6 @@ void
 SEN_Correct(uint8_t temperature, uint8_t humidity, int8_t& outTemperature, int8_t& outHumidity) {
     outTemperature = CORR_Lookup(&s_TemperatureCorrections, temperature);
     outHumidity = CORR_Lookup(&s_HumidityCorrections, humidity);
->>>>>>> r2
 }
 
 static
@@ -1218,23 +873,6 @@ SEN_Read(uint8_t& temperature, uint8_t& humidity) {
         break;
     }
 
-<<<<<<< HEAD
-#ifndef NDEBUG
-    for (uint8_t i = 0; i < sizeof(g_DHT_Bits); ++i)
-    {
-        fprintf_P(s_FILE_Debug, PSTR("%c"), ' ' + g_DHT_Bits[i]);
-    }
-    fprintf(s_FILE_Debug, "\n");
-#endif
-    DHT_Uninit();
-    return error;
-}
-
-
-static
-int8_t
-ProcessCommand(FILE* stream, char* input, uint8_t len) {
-=======
 #ifndef NDEBUG
     for (uint8_t i = 0; i < sizeof(g_DHT_Bits); ++i)
     {
@@ -1471,28 +1109,17 @@ TryParseLong(char** str, long* value, int8_t base) {
 
     return 0;
 }
->>>>>>> r2
 
 #define PARSE_INT8(str) \
     do { \
         long l; \
-<<<<<<< HEAD
-        if (!TryParseLong(str, &l, 0)) { \
-=======
         if (!TryParseLong(&str, &l, 0)) { \
->>>>>>> r2
             SendError(stream, PSTR("Could not convert '%s' to long\n"), str); \
             return 0; \
         } \
         i8Arg = (int8_t)l; \
     } while (0)
 
-<<<<<<< HEAD
-#define PARSE_UINT8(str) \
-    do { \
-        unsigned long l; \
-        if (!TryParseULong(str, &l, 0)) { \
-=======
 
 static
 int8_t
@@ -1552,7 +1179,6 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
     do { \
         unsigned long l; \
         if (!TryParseULong(&str, &l, 0)) { \
->>>>>>> r2
             SendError(stream, PSTR("Could not convert '%s' to ulong\n"), str); \
             return 0; \
         } \
@@ -1563,11 +1189,7 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
 #define PARSE_INT16(str) \
     do { \
         long l; \
-<<<<<<< HEAD
-        if (!TryParseLong(str, &l, 0)) { \
-=======
         if (!TryParseLong(&str, &l, 0)) { \
->>>>>>> r2
             SendError(stream, PSTR("Could not convert '%s' to long\n"), str); \
             return 0; \
         } \
@@ -1590,10 +1212,7 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
     uint8_t u8Arg;
     int8_t i8Arg;
     int16_t i16Arg;
-<<<<<<< HEAD
-=======
     (void)i16Arg;
->>>>>>> r2
     const uint8_t o = 1;
     const uint8_t r = input[0] == '?';
 
@@ -1620,29 +1239,6 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
         goto Error;
     }
 
-<<<<<<< HEAD
-    switch (toupper(input[o])) {
-    case 'B':
-        switch (toupper(input[o+1])) {
-        case 'T':
-            switch (toupper(input[o+2])) {
-            case 'V':
-                switch (toupper(input[o+3])) {
-                case 'L': {
-                        uint16_t counts = BATV_Read();
-                        uint16_t mv = BATV_ToMilliVolt(counts);
-                        fprintf_P(stream, PSTR("counts %u, offset %d, %u [mV]\n"), counts, s_BATV_Offset, mv);
-                        return 1;
-                    } break;
-                case 'O': {
-                        if (r) {
-                            fprintf_P(stream, PSTR("battery voltage offset (counts) %d\n"), s_BATV_Offset);
-                            return 1;
-                        }
-                        PARSE_INT8(input + o + 5);
-                        s_BATV_Offset = i8Arg;
-                        SendOK(stream);
-=======
     for (uint8_t i = 1; i < 5; ++i) {
         input[i] = toupper(input[i]);
     }
@@ -1661,7 +1257,6 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
                         uint16_t counts = BATV_Read();
                         uint16_t mv = BATV_ToMilliVolt(counts);
                         fprintf_P(stream, PSTR("count %u, %u [mV] (=to_mv(count / 16) * 100)\n"), counts, mv);
->>>>>>> r2
                         return 1;
                     } break;
                 }
@@ -1669,11 +1264,7 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
             break;
         } break;
     case 'C':
-<<<<<<< HEAD
-        switch (toupper(input[o+2])) {
-=======
         switch (input[o+2]) {
->>>>>>> r2
         case 'A':
             CONF_ActivateDefault();
             SendOK(stream);
@@ -1689,56 +1280,12 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
         }
         break;
     case 'D':
-<<<<<<< HEAD
-        switch (toupper(input[o+1])) {
-=======
         switch (input[o+1]) {
->>>>>>> r2
         case 'F':
             s_ModeContext.TargetState = MODE_STATE_DEFAULT;
             SendOK(stream);
             return 1;
         default:
-<<<<<<< HEAD
-            switch (toupper(input[o+3])) {
-                case 'R': {
-                    uint8_t temperature, humidity;
-                    int8_t error = SEN_Read(temperature, humidity);
-                    switch (error) {
-                    case 0:
-                        SEN_Correct(temperature, humidity, temperature, humidity);
-                        fprintf_P(stream, PSTR("%d °C (offset .1 %d), %d %%rh (a ." STRINGIFY(DHT_A_SCALE) " %d, b %d)\n"), (int)temperature, s_DHT_Temperature_Offset, (int)humidity, s_DHT_Humidity_Factor, s_DHT_Humidity_Offset);
-                        break;
-                    default:
-                        fprintf_P(stream, DHT_Error_P, error);
-                        break;
-                    }
-                    return 1;
-                } break;
-                case 'T': {
-                    if (r) {
-                       switch (s_Flags.DHT_Type) {
-                       case DHT11:
-                       default:
-                           fprintf_P(stream, PSTR("DHT11\n"));
-                           break;
-                       case DHT22:
-                           fprintf_P(stream, PSTR("DHT22\n"));
-                           break;
-                       }
-                       return 1;
-                    }
-
-                    PARSE_INT8(input + o + 5);
-                    s_Flags.DHT_Type = i8Arg;
-                    SendOK(stream);
-                    return 1;
-                } break;
-            }
-            break;
-        }
-        break;
-=======
             switch (input[o+3]) {
             case 'R': {
                 uint8_t temperature, humidity;
@@ -1777,16 +1324,11 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
             } break;
             } break;
         } break;
->>>>>>> r2
     case 'M':
         fprintf_P(stream, PSTR("%02x\n"), s_Mcusr);
         return 1;
     case 'N':
-<<<<<<< HEAD
-        switch (toupper(input[o+1])) {
-=======
         switch (input[o+1]) {
->>>>>>> r2
         case 'A': {
                 if (r) {
                     fprintf(stream, "%s\n", s_Name);
@@ -1805,35 +1347,23 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
                     return 1;
                 }
 
-<<<<<<< HEAD
-                PARSE_UINT8(input + o + 4);;
-=======
                 char* str = input + o + 4;
                 PARSE_UINT8(str);
->>>>>>> r2
                 Network_SetAddress(u8Arg);
                 SendOK(stream);
                 return 1;
             }
             break;
         case 'T':
-<<<<<<< HEAD
-            switch (toupper(input[o+2])) {
-=======
             switch (input[o+2]) {
->>>>>>> r2
             case 'T': { // TTL
                 if (r) {
                     fprintf(stream, "%u\n", Network_GetTtl());
                     return 1;
                 }
 
-<<<<<<< HEAD
-                PARSE_UINT8(input + o + 4);
-=======
                 char* str = input + o + 4;
                 PARSE_UINT8(str);
->>>>>>> r2
                 Network_SetTtl(u8Arg);
                 SendOK(stream);
                 return 1;
@@ -1844,12 +1374,8 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
                         return 1;
                     }
 
-<<<<<<< HEAD
-                    PARSE_UINT8(input + o + 4);
-=======
                     char* str = input + o + 4;
                     PARSE_UINT8(str);
->>>>>>> r2
                     s_Network_TargetId = u8Arg;
                     SendOK(stream);
                     return 1;
@@ -1858,23 +1384,15 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
         }
         break;
     case 'R':
-<<<<<<< HEAD
-        switch (toupper(input[o+1])) {
-=======
         switch (input[o+1]) {
->>>>>>> r2
         case 'C': { // channel
                 if (r) {
                     fprintf(stream, "%d\n", s_RF24_Channel);
                     return 1;
                 }
 
-<<<<<<< HEAD
-                PARSE_UINT8(input + o + 4);
-=======
                 char* str = input + o + 4;
                 PARSE_UINT8(str);
->>>>>>> r2
                 s_RF24_Channel = u8Arg;
                 RF24_Init();
                 SendOK(stream);
@@ -1882,11 +1400,7 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
             }
             break;
         case 'D':;
-<<<<<<< HEAD
-            switch (toupper(input[o+2])) {
-=======
             switch (input[o+2]) {
->>>>>>> r2
             case 'T': { // data rate
                     if (r) {
                         switch (s_RF24_DataRate) {
@@ -1904,12 +1418,8 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
                         return 1;
                     }
 
-<<<<<<< HEAD
-                    PARSE_UINT8(input + o + 4);
-=======
                     char* str = input + o + 4;
                     PARSE_UINT8(str);
->>>>>>> r2
                     switch (u8Arg) {
                     case 0:
                         s_RF24_DataRate = RF24_DR_250KBPS;
@@ -1950,12 +1460,8 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
                     return 1;
                 }
 
-<<<<<<< HEAD
-                PARSE_UINT8(input + o + 4);
-=======
                 char* str = input + o + 4;
                 PARSE_UINT8(str);
->>>>>>> r2
                 switch (u8Arg) {
                 case 0:
                     s_Flags.RF24_Power = RF24_TX_PWR_M18DB;
@@ -1982,267 +1488,12 @@ ProcessCommand(FILE* stream, char* input, uint8_t len) {
         }
         break;
     case 'S':
-<<<<<<< HEAD
-        switch (toupper(input[o+1])) {
-=======
         switch (input[o+1]) {
->>>>>>> r2
         case 'E':
             s_ModeContext.TargetState = MODE_STATE_SERVICE;
             SendOK(stream);
             return 1;
         case 'N':
-<<<<<<< HEAD
-            switch (toupper(input[o+2])) {
-                case 'H':
-                    switch (toupper(input[o+3])) {
-                        case 'A':
-                            if (r) {
-                                fprintf_P(stream, PSTR("DHT humidity factor a ." STRINGIFY(DHT_A_SCALE) " %d\n"), s_DHT_Humidity_Factor);
-                                return 1;
-                            }
-
-                            PARSE_INT16(input + o + 4);
-                            s_DHT_Humidity_Factor = i16Arg;
-                            SendOK(stream);
-                            return 1;
-                        case 'B':
-                            if (r) {
-                                fprintf_P(stream, PSTR("DHT humidity offset %d\n"), s_DHT_Humidity_Offset);
-                                return 1;
-                            }
-
-                            PARSE_INT8(input + o + 4);
-                            s_DHT_Humidity_Offset = i8Arg;
-                            SendOK(stream);
-                            return 1;
-                    }
-                    break;
-                case 'T':
-                    if (r) {
-                        fprintf_P(stream, PSTR("DHT temperature offset .1 %d\n"), s_DHT_Temperature_Offset);
-                        return 1;
-                    }
-
-                    PARSE_INT8(input + o + 4);
-                    s_DHT_Temperature_Offset = i8Arg;
-                    SendOK(stream);
-                    return 1;
-            }
-            break;
-        }
-        break;
-    case 'V':
-        fprintf_P(stream, s_VersionString_P);
-        putc('\n', stream);
-        return 1;
-    }
-
-Error:
-    fprintf_P(stream, PSTR("Unknown command '%s'. Try '?'.\n"), input);
-
-    return 0;
-
-
-#undef PARSE_INT8
-#undef PARSE_UINT8
-#undef PARSE_UINT16
-}
-
-
-static
-int8_t
-ProcessCommands(FILE* stream, char* buffer, uint8_t* index, uint8_t size) {
-    int8_t commands = 0;
-    int c;
-    int8_t result;
-    while ((c = getc(stream)) != EOF) {
-        if (*index >= size) {
-            DEBUG_P("I/O buffer full, no command\n");
-            *index = 0;
-        }
-        if (c < 0x20) { // space
-            if (c == '\n' || c == '\r') {
-                buffer[*index] = 0;
-                result = ProcessCommand(stream, buffer, *index);
-                *index = 0;
-                if (result == -1) {
-                    return result;
-                }
-                Flush(stream);
-                ++commands;
-            } else {
-                // ignore all control chars
-            }
-        } else {
-//            DEBUG_P("%c", c);
-            buffer[(*index)++] = (char)c;
-        }
-    }
-
-    return commands;
-}
-
-
-
-static volatile uint8_t s_Watchdog_Expired;
-static
-void
-WatchdogCallback() {
-    //USART0_SendString("WDT\n");
-    WDT_Off();
-    s_Watchdog_Expired = 1;
-}
-
-
-#define ever (;;)
-
-static
-void
-RF24_MessageReceivedHandler(uint8_t* ptr, uint8_t size) {
-//    ASSERT_INTERRUPTS_OFF(return, "main");
-//    ASSERT_FILE(ptr, return, "main");
-//    DEBUG_P("RF24 %u bytes\n", size);
-
-    // sanity check
-    if (size != sizeof(NetworkPacket)) {
-        DEBUG_P("Drop ill-sized net packet %u\n", size);
-        return; // size mismatch, drop
-    }
-
-    NetworkPacket* packet = (NetworkPacket*)ptr;
-
-    switch (packet->Type) {
-    case BATMAN_PACKET_TYPE:
-        Batman_Process(packet);
-        break;
-    case TIME_PACKET_TYPE:
-        Time_Process(packet);
-        break;
-    case TCP_PACKET_TYPE:
-        TCP_Process(packet);
-        break;
-    default:
-        // Unknown packet type, drop
-        DEBUG_P("Unknown packet: ");
-#ifndef NDEBUG
-        for (uint8_t i = 0; i < size; ++i) {
-            DEBUG_P("%02x ", ptr[i]);
-        }
-        DEBUG_P("\n");
-#endif
-        break;
-    }
-}
-
-#define RF24_PollEx() \
-    do { \
-        /*ASSERT_INTERRUPTS_OFF(break, "main"); */ \
-        if (FEAT_Available(_BV(FEAT_RF24))) { \
-            RF24_Poll(); \
-        } \
-    } while (0)
-
-
-
-
-
-
-static
-void
-RF24_OfflineReceiveHandler(void*) {
-//    ASSERT_INTERRUPTS_OFF(return, "main");
-    WORK_Remove(RF24_OfflineReceiveHandler);
-    if (FEAT_Available(_BV(FEAT_RF24))) {
-        RF24_Poll();
-    }
-}
-
-ISR(PCINT0_vect) {
-//    DEBUG_P("PCINT0\n");
-    WORK_Remove(RF24_OfflineReceiveHandler);
-    if (FEAT_Available(_BV(FEAT_RF24))) {
-        WORK_AddEx(NULL, RF24_OfflineReceiveHandler);
-    }
-}
-
-
-static
-void
-NetworkSendCallback(NetworkPacket* packet) {
-    RF24_QueueForBatchSend((uint8_t*)packet, sizeof(*packet));
-}
-
-static
-void
-RF24_Init() {
-    // We don't know in what state we get the device so
-    // reset everything
-
-
-    // The CE line needs to be high to actually perform RX/TX
-    DDRB |= _BV(PB1); // pin 9 -> output
-    PORTB &= ~_BV(PB1); // low, this is the CE line
-
-#if F_CPU >= 16000000L
-    SPI_Master_Init(SPI_MSB_FIRST, SPI_CLOCK_DIV_4, SPI_CLOCK_SPEED_1X, SPI_MODE_0);
-#else
-    SPI_Master_Init(SPI_MSB_FIRST, SPI_CLOCK_DIV_4, SPI_CLOCK_SPEED_2X, SPI_MODE_0);
-#endif
-
-    // Arduino pin 8 (PB0 on ATmega328P) is connected to the interrupt line
-    DDRB &= ~_BV(PB0); // pin 8
-    // activate pull up resistor
-    PORTB |= _BV(PB0);
-
-    // enable PCINT0
-    PCICR |= _BV(PCIE0);
-    PCMSK0 |= _BV(PCINT0);
-    PCIFR = 0; // clear any flags
-    RF24_SetInterruptMask(RF24_IRQ_MASK_MAX_RT | RF24_IRQ_MASK_TX_DS);
-
-    RF24_SetCrc(RF24_CRC_16);
-    RF24_SetChannel(s_RF24_Channel);
-    // Looks like using byte zero won't work
-    RF24_SetAddressWidth(RF24_ADDR_WITDH_5);
-    RF24_SetTxAddress(RF24_PIPE_BASE_ADDRESS, 0x01);
-    RF24_SetRxBaseAddress(RF24_PIPE_BASE_ADDRESS);
-    RF24_SetRxAddresses(0x01, 0, 0, 0, 0, 0);
-    RF24_SetRxPipeEnabled(0x01);
-    RF24_SetRxPayloadSizes(RF24_MAX_PAYLOAD_SIZE, 0, 0, 0, 0, 0);
-    RF24_SetDataRate(s_RF24_DataRate);
-    RF24_SetTxPower(s_Flags.RF24_Power);
-
-    // These too lines effectively disable Enhanced Shockburst
-    RF24_SetPipeAutoAcknowledge(0);
-    RF24_SetTxRetries(15, 0);
-
-    // clear any pending interrupts
-    RF24_UpdateRegister(RF24_REG_STATUS, RF24_STATUS_MAX_RT | RF24_STATUS_TX_DS | RF24_STATUS_RX_DR, RF24_STATUS_MAX_RT | RF24_STATUS_TX_DS | RF24_STATUS_RX_DR);
-
-    RF24_PowerUp();
-    RF24_SetRxMode();
-    RF24_FlushTx();
-    RF24_FlushRx();
-
-
-    // finally set CE
-    PORTB |= _BV(PB1);
-
-#ifndef NDEBUG
-    RF24_Dump(s_FILE_Debug);
-#endif
-}
-
-#ifndef NDEBUG
-extern "C" {
-FILE* s_FILE_Debug NOINIT;
-}
-#endif
-
-
-
-=======
             switch (input[o+2]) {
             case 'H':
                 return ProcessCurve(stream, input, &s_HumidityCorrections);
@@ -2328,7 +1579,6 @@ ProcessCommands(FILE* stream, char* buffer, uint8_t* index, uint8_t size) {
  *    In this mode command processing is enabled. The device will remain in
  *    this mode until reset or switched to DEFAULT mode.
  ******************************************************************************/
->>>>>>> r2
 
 #define DoMode(ctx, enter, exit, iteration) \
     do { \
@@ -2448,10 +1698,6 @@ ProcessMode(void* ctx) {
 
                     fprintf_P(s_FILE_USART0, PSTR("Resume command processing for %" PRIu32 " [ms]\n"), NETWORK_RXTX_DURATION);
                     WORK_RequestUpdate(ProcessMode, 0);
-<<<<<<< HEAD
-
-=======
->>>>>>> r2
                 } else if (c->Run) {
                     WORK_RequestUpdate(ProcessMode, Step);
                     ++c->Iterations;
@@ -2504,17 +1750,6 @@ ProcessMode(void* ctx) {
                         }
 
                         if (send) {
-<<<<<<< HEAD
-                            if (bogus) {
-                                c->Temperature = 0;
-                                c->Humidity = 0;
-                            } else {
-                                SEN_Correct(c->Temperature, c->Humidity, c->Temperature, c->Humidity);
-                            }
-                            DEBUG_P("Default: °C %u (O %d), %%rH %u (O %d)\n", c->Temperature, s_DHT_Temperature_Offset, c->Humidity, s_DHT_Humidity_Offset);
-                            c->DHTTries = 0xff;
-
-=======
                             int8_t temperature = 0;
                             int8_t humidity = 0;
 
@@ -2524,24 +1759,10 @@ ProcessMode(void* ctx) {
                             }
 
                             c->DHTTries = 0xff;
->>>>>>> r2
 
                             uint16_t mv = 0;
                             const uint16_t counts = BATV_Read();
                             mv = BATV_ToMilliVolt(counts);
-<<<<<<< HEAD
-                            DEBUG_P("Default: C %u, O %d, %u [mV]\n", counts, s_BATV_Offset, mv);
-
-                            fprintf_P(s_FILE_USART0, PSTR("Device reports %u °C, %u %%rH, %u mV\n"), c->Temperature, c->Humidity, mv);
-                            // let TCP handle it from here
-                            uint8_t via = Batman_Route(s_Network_TargetId);
-                            char buffer[TCP_PAYLOAD_SIZE];
-                            int8_t bytes = snprintf_P((char*)buffer, sizeof(buffer), PSTR("WB%s;%d;%d;%u;%02x"), s_Name, (int)c->Temperature, (int)c->Humidity, mv, via);
-//                              DEBUG_P("(%d) %s\n", bytes, buffer);
-                            TCP_Send(s_Network_TargetId, (const uint8_t*)buffer, bytes);
-                        }
-
-=======
                             DEBUG_P("Default: C %u, %u [mV]\n", counts, mv);
 
                             fprintf_P(s_FILE_USART0, PSTR("Device reports %d °C, %d %%rH, %u mV\n"), temperature, humidity, mv);
@@ -2552,29 +1773,20 @@ ProcessMode(void* ctx) {
                             DEBUG_P("%s\n", buffer);
                             TCP_Send(s_Network_TargetId, (const uint8_t*)buffer, bytes);
                         }
->>>>>>> r2
                     } else if (!IsInWindow32(now, NETWORK_RXTX_DURATION, c->StartOfInterval)) {
                         DEBUG_P("Default: stop\n");
                         c->Run = 0;
                     }
                 } else {
                     DHT_Uninit();
-<<<<<<< HEAD
-                    const uint32_t x = Time_IsSynced() ? Time_TimeToNextInterval() : NETWORK_PERIOD - NETWORK_RXTX_DURATION;
-                    fprintf_P(s_FILE_USART0, PSTR("Pause command processing for %" PRIu32 " [ms]\n"), x);
-=======
 //                    const uint32_t x = Time_IsSynced() ? Time_TimeToNextInterval() : NETWORK_PERIOD - NETWORK_RXTX_DURATION;
 //                    fprintf_P(s_FILE_USART0, PSTR("Pause command processing for %" PRIu32 " [ms]\n"), x);
->>>>>>> r2
                     if (!c->FeaturesReleased) {
                         DEBUG_P("Default: release\n");
                         c->FeaturesReleased = 1;
                         FEAT_Release(_BV(FEAT_USART0) | _BV(FEAT_RF24));
                     }
-<<<<<<< HEAD
-=======
                     WATCH_RequestCalibration();
->>>>>>> r2
                     WORK_RequestUpdate(ProcessMode, NETWORK_PERIOD); // will wake up before this due to callback
                     break;
                 });
@@ -2587,8 +1799,6 @@ ProcessMode(void* ctx) {
 
 #undef DoMode
 
-<<<<<<< HEAD
-=======
 
 
 /*******************************************************************************
@@ -2603,7 +1813,6 @@ ProcessMode(void* ctx) {
  * Once synced, the device will start sending out time sync packages of its own
  * to permit other devices to sync to it.
  ******************************************************************************/
->>>>>>> r2
 static
 void
 UpdateBatman(void*) {
@@ -2704,13 +1913,8 @@ SyncTimeScanContinue(SyncTimeContext* c) {
     } else {
         fprintf_P(s_FILE_USART0, s_ContinueScanMessage_P, ScanTime);
         c->On = 1;
-<<<<<<< HEAD
-        FEAT_Acquire(_BV(FEAT_RF24));
-        WORK_RequestUpdate(SyncTime, ScanTime);
-=======
         WORK_RequestUpdate(SyncTime, ScanTime);
         FEAT_Acquire(_BV(FEAT_RF24));
->>>>>>> r2
         Time_NotifyStartListening(1);
     }
 
@@ -2785,12 +1989,6 @@ SyncTime(void* ctx) {
             SyncTimeScanStart(c);
         }
         break;
-<<<<<<< HEAD
-    }
-}
-
-static
-=======
     default:
         DEBUG_P("SYNC_TIME_STATE: %u\n", c->State);
         break;
@@ -2804,7 +2002,6 @@ static
 
 static
 inline
->>>>>>> r2
 void
 SleepOneMillisecond() {
     if (FEAT_Available(_BV(FEAT_RF24))) {
@@ -2822,142 +2019,6 @@ SleepOneMillisecond() {
 }
 
 static
-<<<<<<< HEAD
-inline
-void
-BATV_Init() {
-//    ADCSRA = _BV(ADIF); // turn off AD and clear any interrupt bit
-//    power_adc_disable();
-
-//    DDRD |= _BV(PD7); // output
-//    PORTD |= _BV(PD7); // high
-
-//    DDRC |= _BV(PC0); // output
-//    PORTC |= _BV(PC0); // high
-
-//    return;
-    ADCSRA = _BV(ADIF); // turn off AD and clear any interrupt bit
-
-    DDRC = 0;   // all input
-    PORTC = 0;  // tri-state
-    DIDR0 = 63; // disable digital I/O on unused analog pins
-
-    // GND line of voltage divider is connected to PD7
-    // input line to A0
-    DDRD &= ~_BV(PD7); // input
-    PORTD &= ~_BV(PD7); // tri-state
-
-    // disabling the ADC effectively
-    // voids all changes to ADCSRA/B, ADMUX
-    power_adc_disable();
-}
-
-static
-uint16_t
-BATV_Read() {
-//    return 0;
-    power_adc_enable();
-
-    ASSERT_FILE(!(ADCSRA & _BV(ADEN)), return 0, "main");
-//    ADCSRA = _BV(ADIF); // turn off AD and clear any interrupt bit
-
-    // setup prescaler to 128 this will work for 8 and 16 MHz
-#if F_CPU >= 16000000L
-    ADCSRA |= 7; // div by 128
-#else
-    ADCSRA |= 6; // div by 64
-#endif
-
-    ADCSRB = 0; // free run mode
-
-    // internal 1.1V reference voltage with cap on AREF pin
-    // also connect A0 pin
-    ADMUX = _BV(REFS1) | _BV(REFS0);
-
-    DDRD |= _BV(PD7); //output
-
-    // enable ADC
-    ADCSRA |= _BV(ADEN); // enable conversion
-
-
-    const int8_t StableThreshold = 3;
-    const int8_t Samples = 7;
-    uint16_t sum = 0;
-    uint16_t l, h;
-    for (int8_t i = 0; i < Samples; ++i) {
-        ADCSRA |= _BV(ADSC);
-
-#if !defined(NDEBUG) && 0
-        uint8_t y = ADCSRA;
-        uint8_t z = ADMUX;
-        DEBUG_P("ADCSRA %02x\n", y);
-        DEBUG_P("ADMUX %02x\n", z);
-#endif
-        loop_until_bit_is_clear(ADCSRA, ADSC);
-
-        l = ADCL;
-        h = ADCH;
-        uint16_t result = h;
-        result <<= 8;
-        result |= l;
-
-        if (i >= StableThreshold) {
-            sum += result;
-        }
-
-        // Clearing of ADIF is apparently not necessary
-        //ADCSRA |= _BV(ADIF); // clear interrupt flag
-    }
-
-    sum /= Samples - StableThreshold;
-
-    DEBUG_P("A0: %u\n", sum);
-
-
-    // it is not enough to cut power to the ADC circuitry,
-    // ADC needs to be turned off beforehand
-    ADCSRA = _BV(ADIF); // turn off ADC and clear any interrupt bit
-
-    DDRD &= ~_BV(PD7); // input
-
-    power_adc_disable();
-
-    return sum;
-}
-
-static
-inline
-uint16_t
-BATV_ToMilliVolt(uint16_t counts) {
-    // for 0 counts = 0v
-//    const int32_t m1k = INT32_C(6449);
-//    const int32_t b1k = INT32_C(0);
-
-//    const int32_t m1k = INT32_C(6111);
-//    const int32_t b1k = INT32_C(275059);
-
-//    int32_t mv = b1k;
-//    mv += m1k * counts;
-//    mv >>= 10;
-//    return mv;
-
-    // ref. voltage is 1.1v
-    // @ 6v we have a target voltage of U6 = 6*(10KOhm/(50KOhm + 10KOhm)) = 1.0v, ratio  1/1.1 = 0.909090, counts = 930
-    // 930 @ 6v, 0 @ 0v
-    // x/count = 6v/930 => x = 6v*count/930
-
-    counts += s_BATV_Offset;
-
-    int32_t mv = 6606;
-    mv *= counts;
-    mv >>= 10;
-    return mv;
-}
-
-int
-main() {
-    cli();
-=======
 void
 NetworkSendCallback(NetworkPacket* packet) {
     RF24_QueueForBatchSend((uint8_t*)packet, sizeof(*packet));
@@ -3099,7 +2160,6 @@ main() {
     // interrupts off
     cli();
 
->>>>>>> r2
     // turn off stuff we absolutely don't use
     //power_ada_disable();
     //power_usb_disable();
@@ -3108,17 +2168,6 @@ main() {
     //power_evsys_disable();
 
 
-<<<<<<< HEAD
-
-    power_twi_disable();
-    power_timer0_disable();
-    power_timer1_disable();
-    power_timer2_disable();
-    DHT_Uninit();
-
-    Network_SetSendCallback(NetworkSendCallback);
-    WDT_SetCallback(WatchdogCallback);
-=======
     power_twi_disable();
     power_timer0_disable();
 //    power_timer1_disable();
@@ -3132,7 +2181,6 @@ main() {
 #ifdef WATCHDOG_SLEEP
     WDT_SetCallback(WATCH_MainLoopCallback);
 #endif
->>>>>>> r2
 
     FEAT_Init();
     WORK_Init();
@@ -3143,12 +2191,7 @@ main() {
 #ifndef NDEBUG
     stderr = s_FILE_Debug = s_FILE_USART0;
 #endif
-<<<<<<< HEAD
-    //SleepTest();
-//    USART0_SendString("Start\n");
-=======
 
->>>>>>> r2
 
 
 //    {
@@ -3179,11 +2222,7 @@ main() {
         fprintf_P(s_FILE_USART0, PSTR("Hello there!\nThis is "));
         fprintf_P(s_FILE_USART0, s_VersionString_P);
         putc('\n', s_FILE_USART0);
-<<<<<<< HEAD
-        fprintf_P(s_FILE_USART0, PSTR("Copyright (c) 2016 Jean Gressmann <jean@0x42.de>"));
-=======
         fprintf_P(s_FILE_USART0, PSTR("Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>"));
->>>>>>> r2
         putc('\n', s_FILE_USART0);
         putc('\n', s_FILE_USART0);
     }
@@ -3201,10 +2240,6 @@ main() {
         }
     }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> r2
     RF24_Init();
     RF24_SetMessageReceivedCallback(RF24_MessageReceivedHandler);
 
@@ -3220,9 +2255,6 @@ main() {
     FEAT_Acquire(_BV(FEAT_USART0));
 #endif
 
-<<<<<<< HEAD
-    set_sleep_mode(SLEEP_MODE_PWR_DOWN);
-=======
 #if defined(WATCHDOG_SLEEP)
     set_sleep_mode(SLEEP_MODE_PWR_DOWN);
     WATCH_Calibrate();
@@ -3231,7 +2263,6 @@ main() {
     TIMSK2 = 0b00000010; // A output compare match
 #endif
 
->>>>>>> r2
 
     SyncTimeContext syncTimeContext;
     memset(&syncTimeContext, 0, sizeof(syncTimeContext));
@@ -3243,11 +2274,8 @@ main() {
 
     uint32_t sleepStart = Time_Now();
 
-<<<<<<< HEAD
-=======
     CLK_Start();
 
->>>>>>> r2
     for ever {
         const uint32_t sleepEnd = Time_Now();
         const uint32_t elapsed = sleepEnd - sleepStart;
@@ -3256,27 +2284,6 @@ main() {
         WORK_Update(elapsed);
 
         const uint32_t sleep = WORK_NextUpdate();
-<<<<<<< HEAD
-
-        if (sleep) {
-
-            //DEBUG_P("Sleep: %" PRIu32 "\n", sleep);
-#if 0
-            const uint16_t SleepStep = 128;
-            if (sleep >= SleepStep) {
-                //DEBUG("Z");
-                _delay_ms(SleepStep);
-                Time_Update(SleepStep);
-                RF24_PollEx();
-            } else {
-                for (uint8_t i = 0; i < sleep; ++i) {
-                    //DEBUG("z");
-                    SleepOneMillisecond();
-                }
-
-                Time_Update(sleep);
-                RF24_PollEx();
-=======
         if (sleep) {
             //DEBUG_P("Sleep: %" PRIu32 "\n", sleep);
 
@@ -3300,24 +2307,10 @@ main() {
                         Time_Update(eplased);
                     }
                 }
->>>>>>> r2
             }
 
             //DEBUG("Sleep done\n");
 
-<<<<<<< HEAD
-#else
-            uint16_t passed;
-            uint16_t millisecondsToSleep = sleep > MAX_WDT_SLEEP_MS ? MAX_WDT_SLEEP_MS : sleep;
-            if (millisecondsToSleep < 16) {
-                passed = millisecondsToSleep;
-                while (millisecondsToSleep--) {
-                    SleepOneMillisecond();
-                }
-            } else {
-                uint8_t prescaler = 9;
-                uint16_t millis = MAX_WDT_SLEEP_MS;
-=======
 #elif defined(WATCHDOG_SLEEP)
             uint16_t passed;
             uint16_t millisecondsToSleep = sleep > WATCH_MAX_SLEEP_MS ? WATCH_MAX_SLEEP_MS : sleep;
@@ -3330,15 +2323,11 @@ main() {
             } else {
                 uint8_t prescaler = 9;
                 uint16_t millis = WATCH_MAX_SLEEP_MS;
->>>>>>> r2
                 while (millis > millisecondsToSleep) {
                     --prescaler;
                     millis >>= 1;
                 }
 
-<<<<<<< HEAD
-                //DEBUG_P("%u", prescaler);
-=======
                 // Turn off the clock but leave timer1 enabled.
                 // The timer will be used to measure the error of the watchdog
                 CLK_ClaimTimer(0);
@@ -3348,20 +2337,15 @@ main() {
                     passed += WATCH_CALIBRATION_DURATION_MS;
                     WATCH_Calibrate();
                 }
->>>>>>> r2
 
 #ifndef NDEBUG
                 USART0_SendFlush();
 #endif
 
-<<<<<<< HEAD
-                s_Watchdog_Expired = 0;
-=======
                 // turn off timer to save power
                 power_timer1_disable();
 
                 WATCH_ResetExpired();
->>>>>>> r2
                 WDT_On(0, 1, prescaler);
 
                 sleep_enable();
@@ -3371,20 +2355,6 @@ main() {
                 cli();
                 sleep_disable();
 
-<<<<<<< HEAD
-                if (s_Watchdog_Expired) {
-                    //  DEBUG_P("Sleep ok %u\n", millis);
-                    passed = millis;
-                } else { // woke up before WDT timeout
-                    WDT_Off();
-                    passed = 0;
-                }
-            }
-
-            if (passed) {
-                Time_Update(passed);
-            }
-=======
                 if (WATCH_IsExpired()) {
                     uint16_t corrected = WATCH_CorrectTime(millis);
                     DEBUG_P("Slept for %u, corrected %u\n", millis, corrected);
@@ -3527,7 +2497,6 @@ main() {
                 s_LastTimePrintedTti = now;
                 DEBUG_P("Tti: %" PRIu32 "\n",  Time_TimeToNextInterval());
             }
->>>>>>> r2
 #endif
         } else {
             RF24_PollEx();
