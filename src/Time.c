@@ -1,6 +1,10 @@
 /* The MIT License (MIT)
  *
+<<<<<<< HEAD
  * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
+=======
+ * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
+>>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -110,7 +114,11 @@ static uint32_t s_Errors NOINIT;
 #endif
 static uint8_t s_Flags NOINIT;
 static uint8_t s_Stratum NOINIT;
+<<<<<<< HEAD
 static uint8_t s_Sources[SOURCE_CHAIN_LENGTH] NOINIT;
+=======
+static uint8_t s_Sources[SOURCE_CHAIN_LENGTH] NOINIT; // to prevent circular time dependencies
+>>>>>>> r2
 static Peer* s_Peers NOINIT;
 static Time_SyncWindowCallback s_Callback NOINIT;
 
@@ -547,6 +555,13 @@ Time_Process(NetworkPacket* packet) {
 
     Time_Payload* t = (Time_Payload*)packet->Payload;
 
+<<<<<<< HEAD
+=======
+//    DEBUG_P("Time: %" PRIu32 " process ori %02x sen %02x\n", s_Mono, t->Originator, t->Sender);
+
+
+
+>>>>>>> r2
     if (t->Originator == NETWORK_BROADCAST_ADDRESS) {
         return;
     }
@@ -599,8 +614,11 @@ Time_Process(NetworkPacket* packet) {
             return; // discard
         }
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> r2
 //        DEBUG_P("Time: %" PRIu32 " rep from %02x\n", s_Mono, t->Sender);
 
         Peer* peer = GetOrCreatePeer(t->Sender);
@@ -679,3 +697,11 @@ void
 Time_SetSyncWindowCallback(Time_SyncWindowCallback callback) {
     s_Callback = callback;
 }
+<<<<<<< HEAD
+=======
+
+void
+Time_BroadcastTime() {
+    BroadcastMessage();
+}
+>>>>>>> r2

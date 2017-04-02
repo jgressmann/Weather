@@ -1,9 +1,12 @@
+<<<<<<< HEAD
 # CMake style include guard
 if(AVR_CMAKE_INCLUDED)
   return()
 endif()
 set(AVR_CMAKE_INCLUDED 1)
 
+=======
+>>>>>>> r2
 include(CMakeParseArguments)
 
 # Path to comilers, headers, libs

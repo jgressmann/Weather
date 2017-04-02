@@ -78,6 +78,10 @@ static void EPollTimerHandler(void *ctx, epoll_event *ev);
 static void EPollIrqPinHandler(void *ctx, epoll_event *ev);
 static void PollRadio();
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> r2
 static sem_t s_Shutdown;
 
 static
@@ -304,6 +308,10 @@ Irq_Parser(void*, char* arg) {
 }
 
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> r2
 static const cmdlopt_opt s_Options[] = {
     { "rf24-channel", "channel to use. Defaults to 76.", 'c', 0x100, s_Dummy_Arg, Channel_Parser },
     { "rf24-base-address", "<value>", 'b', 0x101, s_BaseAddress_Arg, Base_Address_Parser },
@@ -469,6 +477,10 @@ main(int argc, char** argv) {
         goto Exit;
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> r2
     ev.data.fd = mySocketFD;
     ev.events = EPOLLIN | EPOLLET;
     if (epoll_ctl(epollFD, EPOLL_CTL_ADD, ev.data.fd, &ev) < 0) {
@@ -582,6 +594,10 @@ main(int argc, char** argv) {
     signal(SIGTERM, SignalHandler);
     signal(SIGPIPE, SIG_IGN);
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> r2
     ecd.callback = EPollAcceptHandler;
     epoll_loop_set_callback(mySocketFD, ecd);
 
@@ -610,7 +626,15 @@ main(int argc, char** argv) {
 
 Exit:
     if (s_IrqPin) {
+<<<<<<< HEAD
         safe_close(s_IrqPinFd);
+=======
+        if (s_IrqPinFd >= 0) {
+            memset(&ecd, 0, sizeof(ecd));
+            epoll_loop_set_callback(s_IrqPinFd, ecd);
+            safe_close(s_IrqPinFd);
+        }
+>>>>>>> r2
         int fd = safe_open("/sys/class/gpio/unexport", O_WRONLY);
         if (fd >= 0) {
             char buf[8];
@@ -622,7 +646,11 @@ Exit:
         if (s_TimerFd >= 0) {
             memset(&ecd, 0, sizeof(ecd));
             epoll_loop_set_callback(s_TimerFd, ecd);
+<<<<<<< HEAD
             safe_close_ref(&s_TimerFd);
+=======
+            safe_close(s_TimerFd);
+>>>>>>> r2
         }
     }
 
@@ -636,7 +664,11 @@ Exit:
     // close all connections
     if (s_Connections) {
         for (int* it = int_begin(s_Connections); it != int_end(s_Connections); ++it) {
+<<<<<<< HEAD
             safe_close(*it++);
+=======
+            safe_close(*it);
+>>>>>>> r2
         }
         buf_free(s_Connections);
     }
@@ -733,7 +765,12 @@ EPollConnectionDataHandler(void *ctx, epoll_event *ev) {
                         break;
                     }
                 } else if (r == s_PayloadSize) {
+<<<<<<< HEAD
                     //DEBUG("Radio send\n");
+=======
+//                    static int s_Count;
+//                    DEBUG("Radio send %d\n", s_Count++);
+>>>>>>> r2
                     s_Radio.stopListening();
                     if (!s_Radio.write(payload, s_PayloadSize)) {
                         ERROR("Failed to send telegram\n");
@@ -782,6 +819,10 @@ PollRadio() {
     }
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> r2
 static
 void
 EPollTimerHandler(void *ctx, epoll_event *ev) {
@@ -857,3 +898,7 @@ EPollIrqPinHandler(void *ctx, epoll_event *ev) {
     }
 }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> r2

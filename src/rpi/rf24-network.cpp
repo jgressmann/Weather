@@ -1,6 +1,10 @@
 /* The MIT License (MIT)
  *
+<<<<<<< HEAD
  * Copyright (c) 2016 Jean Gressmann <jean@0x42.de>
+=======
+ * Copyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>
+>>>>>>> r2
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -188,6 +192,25 @@ TimeTick_Parser(void*, char* arg) {
     return UnsignedParser(arg, s_Time_Tick_Millis);
 }
 
+<<<<<<< HEAD
+=======
+static bool s_Time_BroadcastOnTick = true;
+static
+int
+TimeBroadcastOnTick_Parser(void*, char* arg) {
+    s_Time_BroadcastOnTick = EnabledParser(arg);
+    return 0;
+}
+
+static bool s_Time_PrintTti = false;
+static
+int
+TimePrintTti_Parser(void*, char* arg) {
+    s_Time_PrintTti = EnabledParser(arg);
+    return 0;
+}
+
+>>>>>>> r2
 static uint8_t s_Network_Ttl = 0xff;
 static
 int
@@ -205,7 +228,12 @@ static const cmdlopt_opt s_Options[] = {
     { "time-enable", "Enables time. Defaults to yes.", 0, 0x110, s_Dummy_Arg, TimeEnabled_Parser },
     { "time-stratum", "Stratum of time. Lower values mean better clock. Defaults to 0.", 0, 0x111, s_Dummy_Arg, TimeStratum_Parser },
     { "time-tick", "Interval between time ticks. Defaults to 1000 [ms].", 0, 0x112, s_Dummy_Arg, TimeTick_Parser },
+<<<<<<< HEAD
 
+=======
+    { "time-broadcast-on-tick", "Broadcast the time on tick. Defaults to true.", 0, 0x113, s_Dummy_Arg, TimeBroadcastOnTick_Parser },
+    { "time-tti", "Print time-to-interval (tti) periodically.", 0, 0x114, s_Dummy_Arg, TimePrintTti_Parser },
+>>>>>>> r2
     CMDLOPT_COMMON_OPTIONS,
     CMDLOPT_OPTION_TERMINATOR
 };
@@ -214,6 +242,10 @@ static const cmdlopt_opt s_Options[] = {
 static int s_TimerFd = -1;
 static int s_PacketRouterSocketFD = -1;
 static uint64_t s_LastIterationsTimestamp;
+<<<<<<< HEAD
+=======
+static uint64_t s_LastTimeBroadcastTimestamp;
+>>>>>>> r2
 typedef std::set<int> HandleSet;
 static HandleSet s_TcpConnections;
 static HandleSet s_Connections;
@@ -221,6 +253,10 @@ static int s_In_SendReceive_Window;
 static
 void
 NetworkSendCallback(NetworkPacket* packet) {
+<<<<<<< HEAD
+=======
+//    DEBUG("Send to packet router\n");
+>>>>>>> r2
     write(s_PacketRouterSocketFD, packet, sizeof(*packet));
 }
 
@@ -286,7 +322,11 @@ main(int argc, char** argv) {
     TCP_SetDataReceivedCallback(TcpDataReceived);
 
     cmdlopt_set_app_name(RF24_NETWORK_APP_NAME);
+<<<<<<< HEAD
     cmdlopt_set_app_version("1.3.0\nCopyright (c) 2016 Jean Gressmann <jean@0x42.de>");
+=======
+    cmdlopt_set_app_version("1.3.1\nCopyright (c) 2016, 2017 Jean Gressmann <jean@0x42.de>");
+>>>>>>> r2
     cmdlopt_set_options(s_Options);
     int error = cmdlopt_parse_cmdl(argc, argv, NULL);
 
@@ -523,7 +563,11 @@ EPollPacketRouterHandler(void *ctx, epoll_event *ev) {
                         break;
                     }
                 } else if (r == sizeof(packet)) {
+<<<<<<< HEAD
                     if (!s_Time_Enabled || s_In_SendReceive_Window) {
+=======
+                    if (s_In_SendReceive_Window) {
+>>>>>>> r2
                         switch (packet.Type) {
                         case BATMAN_PACKET_TYPE:
                             if (s_Batman_Enabled) {
@@ -596,6 +640,19 @@ EPollTimerHandler(void *ctx, epoll_event *ev) {
         if (s_Time_Enabled) {
             if (millisElapsed) {
                 Time_Update(millisElapsed);
+<<<<<<< HEAD
+=======
+                if (s_Time_BroadcastOnTick) {
+                    const uint64_t millisElapsed = now - s_LastTimeBroadcastTimestamp;
+                    if (millisElapsed >= s_Time_Tick_Millis) {
+                        s_LastTimeBroadcastTimestamp = now;
+                        if (s_Time_PrintTti) {
+                            LOG("Tti: %u\n", Time_TimeToNextInterval());
+                        }
+                        Time_BroadcastTime();
+                    }
+                }
+>>>>>>> r2
             }
 
             arm = true;
@@ -604,15 +661,23 @@ EPollTimerHandler(void *ctx, epoll_event *ev) {
         const uint32_t left = Time_TimeToNextInterval();
         uint32_t millis = left < s_Time_Tick_Millis ? left : s_Time_Tick_Millis;
 
+<<<<<<< HEAD
         if (s_Batman_Enabled &&
             (!s_Time_Enabled || s_In_SendReceive_Window)) {
+=======
+        if (s_Batman_Enabled && s_In_SendReceive_Window) {
+>>>>>>> r2
             Batman_Update();
             Batman_Broadcast();
             arm = true;
         }
 
+<<<<<<< HEAD
         if (s_Tcp_Enabled &&
             (!s_Time_Enabled || s_In_SendReceive_Window)) {
+=======
+        if (s_Tcp_Enabled && s_In_SendReceive_Window) {
+>>>>>>> r2
             TCP_Update();
             if (millis > 8) {
                 millis = 8;

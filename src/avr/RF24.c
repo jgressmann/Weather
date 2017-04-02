@@ -253,17 +253,37 @@ RF24_Dump(FILE *f) {
     };
 
     uint8_t config;
+<<<<<<< HEAD
+=======
+    uint8_t en_aa;
+    uint8_t en_rxaddr;
+>>>>>>> r2
     uint8_t rf_ch;
     uint8_t rf_setup;
     uint8_t setup_aw;
     uint8_t status;
     uint8_t fifo_status;
+<<<<<<< HEAD
+=======
+    uint8_t feature;
+>>>>>>> r2
 
     buffer[0] = RF24_OP_READ_REG | RF24_REG_CONFIG;
     buffer[1] = 0xff;
     RF24_SPI_Run(buffer, 2);
     status = buffer[0];
     config = buffer[1];
+<<<<<<< HEAD
+=======
+    buffer[0] = RF24_OP_READ_REG | RF24_REG_EN_AA;
+    buffer[1] = 0xff;
+    RF24_SPI_Run(buffer, 2);
+    en_aa = buffer[1];
+    buffer[0] = RF24_OP_READ_REG | RF24_REG_EN_RXADDR;
+    buffer[1] = 0xff;
+    RF24_SPI_Run(buffer, 2);
+    en_rxaddr = buffer[1];
+>>>>>>> r2
     buffer[0] = RF24_OP_READ_REG | RF24_REG_RF_CH;
     buffer[1] = 0xff;
     RF24_SPI_Run(buffer, 2);
@@ -280,6 +300,13 @@ RF24_Dump(FILE *f) {
     buffer[1] = 0xff;
     RF24_SPI_Run(buffer, 2);
     fifo_status = buffer[1];
+<<<<<<< HEAD
+=======
+    buffer[0] = RF24_OP_READ_REG | RF24_REG_FEATURE;
+    buffer[1] = 0xff;
+    RF24_SPI_Run(buffer, 2);
+    feature = buffer[1];
+>>>>>>> r2
 
     const char* fmt = PSTR(
 "CONFIG\n"
@@ -290,6 +317,11 @@ RF24_Dump(FILE *f) {
 "  CRCO:         %d\n"
 "  PWR_UP:       %d\n"
 "  PRIM_RX:      %d (%s)\n"
+<<<<<<< HEAD
+=======
+"EN_AA:          %02x\n"
+"EN_RXADDR:      %02x\n"
+>>>>>>> r2
 "RF_CH:          %d\n"
 "RF_SETUP\n"
 "  CONT_WAVE:    %d\n"
@@ -309,7 +341,13 @@ RF24_Dump(FILE *f) {
 "  TX_FULL:      %d\n"
 "  TX_EMPTY:     %d\n"
 "  RX_FULL:      %d\n"
+<<<<<<< HEAD
 "  RX_EMPTY:     %d\n");
+=======
+"  RX_EMPTY:     %d\n"
+"FEATURE:        %02x\n"
+);
+>>>>>>> r2
     fprintf_P(f, fmt,
         (config & RF24_CONFIG_MASK_RX_DR) ? 1 : 0,
         (config & RF24_CONFIG_MASK_TX_DS) ? 1 : 0,
@@ -318,6 +356,11 @@ RF24_Dump(FILE *f) {
         (config & RF24_CONFIG_CRCO) ? 1 : 0,
         (config & RF24_CONFIG_PWR_UP) ? 1 : 0,
         (config & RF24_CONFIG_PRIM_RX) ? 1 : 0, (config & RF24_CONFIG_PRIM_RX) ? "rx" : "tx",
+<<<<<<< HEAD
+=======
+        en_aa,
+        en_rxaddr,
+>>>>>>> r2
         rf_ch,
         (rf_setup & RF24_RF_SETUP_CONT_WAVE) ? 1 : 0,
         (rf_setup & RF24_RF_SETUP_RF_DR_LOW) ? 1 : 0,
@@ -334,7 +377,12 @@ RF24_Dump(FILE *f) {
         (fifo_status & RF24_FIFO_STATUS_TX_FULL) ? 1 : 0,
         (fifo_status & RF24_FIFO_STATUS_TX_EMPTY) ? 1 : 0,
         (fifo_status & RF24_FIFO_STATUS_RX_FULL) >> 1,
+<<<<<<< HEAD
         (fifo_status & RF24_FIFO_STATUS_RX_EMPTY) ? 1 : 0);
+=======
+        (fifo_status & RF24_FIFO_STATUS_RX_EMPTY) ? 1 : 0,
+        feature);
+>>>>>>> r2
 
 
 
@@ -350,10 +398,17 @@ RF24_Dump(FILE *f) {
     RF24_SPI_Run(buffer, 2);
     fprintf_P(f, PSTR("Rx enaddr %02x\n"), buffer[1]);
 
+<<<<<<< HEAD
     buffer[0] = RF24_OP_READ_REG | RF24_REG_FEATURE;
     buffer[1] = 0xff;
     RF24_SPI_Run(buffer, 2);
     fprintf_P(f, PSTR("Feature %02x\n"), buffer[1]);
+=======
+//    buffer[0] = RF24_OP_READ_REG | RF24_REG_FEATURE;
+//    buffer[1] = 0xff;
+//    RF24_SPI_Run(buffer, 2);
+//    fprintf_P(f, PSTR("Feature %02x\n"), buffer[1]);
+>>>>>>> r2
 
     buffer[0] = RF24_OP_READ_REG | RF24_REG_RX_ADDR_P0;
     buffer[1] = 0xff;
@@ -388,11 +443,21 @@ RF24_Poll() {
     }
 }
 
+<<<<<<< HEAD
 void RF24_TxQueueClear() {
     s_TxQueueData.Size = 0;
 }
 
 int8_t RF24_TxQueueSubmit(const uint8_t* ptr, uint8_t size) {
+=======
+void
+RF24_TxQueueClear() {
+    s_TxQueueData.Size = 0;
+}
+
+int8_t
+RF24_TxQueueSubmit(const uint8_t* ptr, uint8_t size) {
+>>>>>>> r2
     ASSERT_FILE(ptr, return 0, "rf24");
     ASSERT_FILE(size, return 0, "rf24");
     ASSERT_FILE(size <= RF24_MAX_PAYLOAD_SIZE, return 0, "rf24");
